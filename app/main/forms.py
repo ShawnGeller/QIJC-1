@@ -80,7 +80,6 @@ class ManualSubmissionForm(FlaskForm):
 class VoteForm(FlaskForm):
     vote_num = IntegerField()
     vote_den = IntegerField()
-    lock = SubmitField('Read vote.')
 
 class FullVoteForm(FlaskForm):
     master_den = IntegerField()

@@ -127,13 +127,9 @@ def vote():
     for i in range(len(voteform.data['votes'])):
         paper = voteforms[i][0]
         data = voteform.data['votes'][i]
-        if data['lock']:
-            session[i] = data['vote_den']
-            session['latest'] = data['vote_den']
-            session['scroll'] = paper.id
         if data['vote_num'] and voteform.submit.data: #val on num
             paper.score_n = data['vote_num']
-            paper.score_d = session[i]
+            paper.score_d = data['vote_den']
             paper.voted = datetime.now().date()
             db.session.commit()
             votes += 1
@@ -141,10 +137,10 @@ def vote():
         flash('{} votes counted.'.format(votes))
         week = datetime.now().date().strftime('%Y-%m-%d')
         return redirect(url_for('main.history', week=week))
-    return render_template('main/vote.html', title='Vote',
-                           showsub=True, locked=session,
-                           voteform=voteform, voteforms=voteforms,
-                               extras=True)
+    return render_template(
+        'main/vote.html', title='Vote', showsub=True, voteform=voteform,
+        voteforms=voteforms, extras=True
+    )
 
 @bp.route('/user/<username>', methods=['GET', 'POST'])
 @login_required

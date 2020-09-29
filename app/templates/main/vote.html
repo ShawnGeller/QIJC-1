@@ -9,17 +9,13 @@
       <div id='{{ paper.id }}'></div>
       {% include 'main/_paper.html' %}
       {{ i[1].hidden_tag() }}
-      <div class='vote'>
-	Vote: {{ i[1].vote_num(size=1) }} /
-	{% if locked[j]  %}
-	  {{ locked[j] }}
-	{% elif locked['latest'] %}
-	  {{ i[1].vote_den(size=1, value=locked['latest']) }}
-	  {{ i[1].lock() }}
-	{% else %}
-	  {{ i[1].vote_den(size=1) }}
-	  {{ i[1].lock() }}
-	{% endif %}
+      <div class='vote' id="vote-form-{{ j }}">
+	Vote: {{ i[1].vote_num(size=1, class_="vote-num") }} / {{ i[1].vote_den(size=1, class_="vote-den") }}
+          <button class="vote-button" type="button"
+                  onclick="this.disabled=true;
+                  for (let node of this.parentNode.childNodes){
+                      node.disabled=true;
+                  }" >Vote</button>
 </div></div>
 {% endfor %}
 <br>
@@ -28,13 +24,17 @@
 {% endblock %}
 
 {% block scripts %}
-  {{super()}}
-  {% if locked['scroll'] %}
     <script>
-      $('html, body').animate({
-      scrollTop: $("#{{ locked['scroll'] }}").offset().top
-      }, 300);
+        const denominators = document.querySelectorAll('.vote-den')
+        for (let denominator of denominators) {
+            denominator.addEventListener('input', function(){
+                for (let d of denominators) {
+                    if (d.disabled===false) {
+                        d.value = denominator.value;
+                    }
+                }
+            })
+        }
     </script>
-  {% endif %}
 {% endblock %}
 
