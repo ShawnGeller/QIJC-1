@@ -130,7 +130,7 @@ def vote():
         if data['lock']:
             session[i] = data['vote_den']
             session['latest'] = data['vote_den']
-            session['scroll'] = paper.id
+            # session['scroll'] = paper.id
         if data['vote_num'] and voteform.submit.data: #val on num
             paper.score_n = data['vote_num']
             paper.score_d = session[i]
@@ -169,7 +169,8 @@ def user(username):
 @bp.route('/history')
 @login_required
 def history():
-    poppers = ['latest', 'scroll']
+    # poppers = ['latest', 'scroll']
+    poppers = ['latest']
     poppers.extend([i for i in range(99)])
     for i in poppers:
         if i in session:
