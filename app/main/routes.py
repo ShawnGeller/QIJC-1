@@ -127,13 +127,6 @@ def vote():
     for i in range(len(voteform.data['votes'])):
         paper = voteforms[i][0]
         data = voteform.data['votes'][i]
-<<<<<<< HEAD
-=======
-        if data['lock']:
-            session[i] = data['vote_den']
-            session['latest'] = data['vote_den']
-            # session['scroll'] = paper.id
->>>>>>> 03c728e305b2c78b055e2fe87ffd5ae9887425c3
         if data['vote_num'] and voteform.submit.data: #val on num
             paper.score_n = data['vote_num']
             paper.score_d = data['vote_den']
