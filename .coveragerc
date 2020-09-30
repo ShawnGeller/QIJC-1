@@ -1,6 +1,0 @@
-[report]
-omit =
-     venv/*
-
-[tool:pytest]
-addopts = --cov=qijc

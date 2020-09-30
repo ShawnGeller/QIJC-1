@@ -36,3 +36,5 @@ migrations/
 app/test.db
 .idea/
 config.py
+data.sqlite
+.coveragerc
