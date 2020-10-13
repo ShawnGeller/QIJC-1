@@ -1,28 +1,22 @@
 import requests
 from xml.etree import ElementTree as et
 from flask import flash
+import re
+import arxiv
 
 class Scraper(object):
     failed = 0
     error = 0
 
     def arxiv_scrape(self, link):
-        id = link.split('/')[-1]
-        url = 'http://export.arxiv.org/api/query?id_list=' + id
-        xml = requests.get(url).content
-        tree = et.fromstring(xml)
-        authors = []
-        title = ""
-        abstract = ""
-        for i in range(len(tree)):
-            if 'entry' in tree[i].tag:
-                for j in range(len(tree[i])):
-                    if 'title' in tree[i][j].tag:
-                        title = tree[i][j].text
-                    elif 'summary' in tree[i][j].tag:
-                        abstract = tree[i][j].text
-                    if 'author' in tree[i][j].tag:
-                        authors.append(tree[i][j][0].text)
+        # id = link.split('/')[-1]
+        m = re.match(".*/([0-9.]+).*", link)
+        if m is not None:
+            id = m.groups()[0]
+        q = arxiv.query(id_list=[id])[0]
+        authors = q['authors']
+        title = q['title']
+        abstract = q['summary']
         return authors, abstract, title
     
     def get(self, link):

@@ -19,11 +19,12 @@
       {{ form.link.label }}<br>
       {{ form.link(size=64) }}<br>
       {{ errors(form.link.errors) }}
-    </p>
-    <p>
-      {{ form.volunteering.label }}
-      {{ form.volunteering(size=64) }}<br>
-    </p>
+    {% for subfield in form.volunteering %}
+    <tr>
+        <td>{{ subfield }}</td>
+        <td>{{ subfield.label }}</td>
+    </tr><br>
+    {% endfor %}
     <p>
       {{ form.comments.label }}<br>
       {{ form.comments(size=64) }}<br>

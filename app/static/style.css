@@ -8,13 +8,13 @@ body {
 }
 
 hr {
-    border: 5px solid darkblue;
+    border: 5px solid midnightblue;
     border-radius: 5px;
 }
 
 input {
     border-radius: 5px;
-    border: 2px solid darkblue;
+    border: 2px solid midnightblue;
     background-color: lightgrey;
 }
 
@@ -36,11 +36,11 @@ table, th, td{
 }
 
 tr:hover{
-    background-color: blue;
-    color: white;
+    background-color: white;
+    color: black;
 }
 tr:hover a{
-    color: white;
+    color: black;
 }
 
 .table-hover {
@@ -48,12 +48,12 @@ tr:hover a{
     border-radius: 20px;
     padding: 10px;
     margin: 5px;
-    background-color: darkblue;
-    color: white;
+    background-color: white;
+    color: black;
 }
 
 .table-hover a {
-    color:white;
+    color: black;
 }
 
 .vote {
@@ -62,7 +62,7 @@ tr:hover a{
 
 .vote-button {
     border-radius: 5px;
-    border: 2px solid darkblue;
+    border: 2px solid midnightblue;
     background-color: lightgrey;
     padding: 5px;
     color: black;
@@ -76,3 +76,5 @@ tr:hover a{
     font-weight: bold;
 }
 
+:link { color: #0000EE; }
+:visited { color: #551A8B; }

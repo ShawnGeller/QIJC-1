@@ -79,6 +79,7 @@ class Paper(db.Model):
     title = db.Column(db.String(140))
     timestamp = db.Column(db.Date, index=True, default=datetime.utcnow)
     link = db.Column(db.String(140))
+    pdf_url = db.Column(db.String(140))
     abstract = db.Column(db.String(512))
     authors = db.Column(db.String(256))
     voted = db.Column(db.Date)

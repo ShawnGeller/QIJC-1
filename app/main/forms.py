@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from flask_login import current_user
 from wtforms import (StringField, PasswordField, BooleanField,
                      SubmitField, IntegerField, FieldList, FormField,
-                     SelectField, TextAreaField)
+                     SelectField, TextAreaField, RadioField)
 from wtforms.validators import (DataRequired, ValidationError, Email,
                                 EqualTo, Regexp)
 from app.models import User, Paper
@@ -40,7 +40,12 @@ class SearchForm(FlaskForm):
         
 class PaperSubmissionForm(FlaskForm):
     link = StringField('Link', validators=[DataRequired()])
-    volunteering = BooleanField("I'm volunteering to discuss this paper.")
+    volunteering = RadioField(
+        'Volunteer',
+        choices=[('now', "I'm volunteering to discuss this paper now"),
+                 ('later', "I'm volunteering to discuss this paper later"),
+                 ('not_vol', "I'm not volunteering to discuss this paper")]
+    )
     comments = StringField('Comments (optional)')
     submit = SubmitField('Submit URL')
 
