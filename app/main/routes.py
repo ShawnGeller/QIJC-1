@@ -137,11 +137,12 @@ def submit_m():
 @bp.route('/vote', methods=['GET', 'POST'])
 @login_required
 def vote():
-    papers_v = (Paper.query.filter(Paper.voted == None)
-                .filter(Paper.volunteer_id != None)
-                .order_by(Paper.timestamp.desc()).all())
-    papers_ = (Paper.query.filter(Paper.voted == None)
-               .order_by(Paper.timestamp.desc()).all())
+    papers_v = (Paper.query.filter(Paper.voted==None)
+              .filter(Paper.volunteer_id != None)
+              .order_by(Paper.timestamp.asc()).all())
+    papers_ = (Paper.query.filter(Paper.voted==None)
+               .filter(Paper.volunteer_id == None)
+               .order_by(Paper.timestamp.asc()).all())
     papers = papers_v + papers_
     voteform = FullVoteForm(votes=range(len(papers)))
     voteforms = list(zip(papers, voteform.votes))
