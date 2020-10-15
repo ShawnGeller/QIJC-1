@@ -46,7 +46,7 @@ class PaperSubmissionForm(FlaskForm):
                  ('later', "I'm volunteering to discuss this paper later"),
                  ('not_vol', "I'm not volunteering to discuss this paper")]
     )
-    comments = StringField('Comments (optional)')
+    comments = TextAreaField('Comments (optional)')
     submit = SubmitField('Submit URL')
 
     def validate_link(self, link):
