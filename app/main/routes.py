@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from werkzeug.urls import url_parse
 from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullVoteForm, SearchForm,
-                            FullEditForm, CommentForm, MessageForm)
+                            FullEditForm, CommentForm, MessageForm,
+                            AnnoucementForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm
 from flask_login import (current_user, login_user, logout_user,
                          login_required)
@@ -300,3 +301,11 @@ def message():
     form.body.data = bodydefault
     return render_template('main/message.html', form=form,
                            bodydefault=bodydefault)
+
+@bp.route('/announce', methods=['GET', 'POST'])
+@login_required
+def announce():
+    if not current_user.admin:
+        flash('Admin privilege required to announce.')
+        return redirect(url_for('main.index'))
+    form = AnnoucementForm()

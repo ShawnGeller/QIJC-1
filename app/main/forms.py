@@ -46,7 +46,7 @@ class PaperSubmissionForm(FlaskForm):
                  ('later', "I'm volunteering to discuss this paper later"),
                  ('not_vol', "I'm not volunteering to discuss this paper")]
     )
-    comments = StringField('Comments (optional)')
+    comments = TextAreaField('Comments (optional)')
     submit = SubmitField('Submit URL')
 
     def validate_link(self, link):
@@ -102,7 +102,7 @@ class FullEditForm(FlaskForm):
     edits = FieldList(FormField(EditForm))
 
 class CommentForm(FlaskForm):
-    comment = StringField('Comment', validators=[DataRequired()])
+    comment = TextAreaField('Comment', validators=[DataRequired()])
     submit = SubmitField('Submit.')
 
 class MessageForm(FlaskForm):
@@ -111,3 +111,8 @@ class MessageForm(FlaskForm):
     body = TextAreaField('Body', validators=[DataRequired()])
     abstracts = BooleanField('Attach abstracts:', default=True)
     submit = SubmitField('Send.')
+
+
+class AnnoucementForm(FlaskForm):
+    announcement = StringField('Announcement', validators=[DataRequired()])
+    submit = SubmitField('Submit')

@@ -5,7 +5,19 @@
 <form action='' method='post'>
 {{ form.hidden_tag() }}
 {{ form.comment.label }}<br>
-{{ form.comment(size=64, style="height: 200px;") }}<br>
+{{ form.comment(size=64, style="height: 100px;width: 400px;") }}<br>
 {{ form.submit() }}
 </form>
 {% endblock %}
+{#{% block scripts %}#}
+{#<script type="text/javascript">#}
+{#    window.addEventListener('keydown',function(e){#}
+{#        if(e.keyIdentifier=='U+000A'||e.keyIdentifier=='Enter'||e.keyCode==13) {#}
+{#            if(e.target.nodeName=='INPUT'&&e.target.type=='text'){#}
+{#                e.preventDefault();#}
+{#                return false;#}
+{#            }#}
+{#        }#}
+{#    },true);#}
+{#</script>#}
+{#{% endblock %}#}
