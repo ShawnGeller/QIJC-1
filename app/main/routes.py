@@ -172,7 +172,6 @@ def vote():
     voteforms = list(zip(papers, voteform.votes))
     votes = 0
     for i in range(len(voteform.data['votes'])):
-        logging.log(0, "here")
         paper = voteforms[i][0]
         data = voteform.data['votes'][i]
         if data['vote_num'] and voteform.submit.data:  # val on num
@@ -326,10 +325,3 @@ def message():
     return render_template('main/message.html', form=form,
                            bodydefault=bodydefault)
 
-@bp.route('/announce', methods=['GET', 'POST'])
-@login_required
-def announce():
-    if not current_user.admin:
-        flash('Admin privilege required to announce.')
-        return redirect(url_for('main.index'))
-    form = AnnoucementForm()

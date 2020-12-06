@@ -106,7 +106,7 @@ class CommentForm(FlaskForm):
     submit = SubmitField('Submit.')
 
 class AnnouncementForm(FlaskForm):
-    announcement = StringField('Announcement', validators=[DataRequired()])
+    announcement = TextAreaField('Announcement', validators=[DataRequired()])
     submit = SubmitField('Submit.')
 
 class MessageForm(FlaskForm):
