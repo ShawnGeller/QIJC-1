@@ -48,7 +48,7 @@ def announce():
     if form.validate_on_submit():
         announcement = Announcement(
             text=form.announcement.data,
-            announcer=current_user,
+            announcer_id=current_user.get_id(),
         )
         db.session.add(announcement)
         db.session.commit()
