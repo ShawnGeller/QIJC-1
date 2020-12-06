@@ -5,7 +5,7 @@
 <hr>
 <h2>Announcement</h2>
     <div>
-        {{ announcement.text }}
+        {{ announcement }}
     </div><br>
     {% if current_user.admin %}
     <a href="{{ url_for('main.announce') }}" class="vote-button">Edit Text</a>

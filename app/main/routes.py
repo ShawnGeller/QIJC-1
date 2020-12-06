@@ -1,7 +1,7 @@
 from app import db
 from app.main import bp
 from flask import (Flask, render_template, request,
-                   flash, redirect, url_for, session, abort)
+                   flash, redirect, url_for, session, abort, Markup)
 from datetime import datetime, timedelta
 from werkzeug.urls import url_parse
 from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
@@ -17,6 +17,7 @@ from app.email import send_abstracts
 from textwrap import dedent
 import re
 import arxiv
+import textile
 
 last_month = datetime.today() - timedelta(days=30)
 
@@ -35,7 +36,7 @@ def index():
     if announcement is None:
         announcement = Announcement(text='')
     return render_template('main/index.html', users=users,
-                           announcement=announcement,
+                           announcement=Markup(announcement.text),
                            current_user=current_user)
 
 @bp.route('/announce', methods=['GET', 'POST'])

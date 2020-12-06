@@ -6,14 +6,14 @@ import sys
 sys.path.insert(-1, '/data/wsgi/qijc/app')
 
 from app import create_app, db
-from app.models import User, Paper
+from app.models import User, Paper, Announcement
 
 app = create_app()
 application = app
 
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'User': User, 'Paper': Paper}
+    return {'db': db, 'User': User, 'Paper': Paper, 'Announcement': Announcement}
 
 if __name__ == '__main__':
     app.run()
