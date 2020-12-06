@@ -100,6 +100,10 @@ class CommentForm(FlaskForm):
     comment = StringField('Comment', validators=[DataRequired()])
     submit = SubmitField('Submit.')
 
+class AnnouncementForm(FlaskForm):
+    announcement = StringField('Announcement', validators=[DataRequired()])
+    submit = SubmitField('Submit.')
+
 class MessageForm(FlaskForm):
     e_from = StringField('From', validators=[DataRequired(), Email()])
     subject = StringField('Subject', validators=[DataRequired()])

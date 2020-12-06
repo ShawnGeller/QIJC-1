@@ -1,20 +1,22 @@
 from app import db
 from app.main import bp
 from flask import (Flask, render_template, request,
-                   flash, redirect, url_for, session)
+                   flash, redirect, url_for, session, abort)
 from datetime import datetime, timedelta
 from werkzeug.urls import url_parse
 from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullVoteForm, SearchForm,
-                            FullEditForm, CommentForm, MessageForm)
+                            FullEditForm, CommentForm, MessageForm,
+                            AnnouncementForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm
 from flask_login import (current_user, login_user, logout_user,
                          login_required)
-from app.models import User, Paper
+from app.models import User, Paper, Announcement
 from sqlalchemy import cast, Float
 from app.main.scraper import Scraper
 from app.email import send_abstracts
 from textwrap import dedent
+import logging
 
 last_month = datetime.today() - timedelta(days = 30)
 
@@ -28,7 +30,30 @@ def index():
             db.session.commit()
     users = (User.query.filter(User.retired == 0)
              .order_by(User.hp.desc()).all())
-    return render_template('main/index.html', users=users)
+    announcement = Announcement.query.order_by(Announcement.timestamp.desc()).limit(1).first()
+    if announcement is None:
+        announcement = Announcement(text='')
+    return render_template('main/index.html', users=users,
+                           announcement=announcement,
+                           current_user=current_user)
+
+@bp.route('/announce', methods=['GET', 'POST'])
+@login_required
+def announce():
+    if not current_user.admin:
+        abort(403)
+    announcement = Announcement.query.order_by(Announcement.timestamp.desc()).limit(1).first()
+    form = AnnouncementForm(announcement=(announcement.text if announcement is not None else ''))
+    if form.validate_on_submit():
+        announcement = Announcement(
+            text=form.announcement.data,
+            announcer=current_user,
+        )
+        db.session.add(announcement)
+        db.session.commit()
+        return redirect(url_for('main.index'))
+    return render_template('main/announce.html', form=form, title='Announcement')
+
 
 @bp.route('/submit', methods=['GET', 'POST'])
 @login_required
@@ -125,21 +150,16 @@ def vote():
     voteforms = list(zip(papers, voteform.votes))
     votes = 0
     for i in range(len(voteform.data['votes'])):
+        logging.log(0, "here")
         paper = voteforms[i][0]
         data = voteform.data['votes'][i]
-<<<<<<< HEAD
-=======
-        if data['lock']:
-            session[i] = data['vote_den']
-            session['latest'] = data['vote_den']
-            # session['scroll'] = paper.id
->>>>>>> 03c728e305b2c78b055e2fe87ffd5ae9887425c3
         if data['vote_num'] and voteform.submit.data: #val on num
+            logging.log(0, "there")
             paper.score_n = data['vote_num']
             paper.score_d = data['vote_den']
             paper.voted = datetime.now().date()
-            db.session.commit()
             votes += 1
+        db.session.commit()
     if votes and voteform.submit.data:
         flash('{} votes counted.'.format(votes))
         week = datetime.now().date().strftime('%Y-%m-%d')

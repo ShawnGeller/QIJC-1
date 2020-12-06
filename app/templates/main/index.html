@@ -3,6 +3,13 @@
 {% block app_content %}
 <h1>Quantum Information Journal Club</h1>
 <hr>
+<h2>Announcement</h2>
+    <div>
+        {{ announcement.text }}
+    </div><br>
+    {% if current_user.admin %}
+    <a href="{{ url_for('main.announce') }}" class="vote-button">Edit Text</a>
+    {% endif %}
 <h2>Scoreboard:</h2>
 <table>
   <tr>

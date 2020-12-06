@@ -100,3 +100,16 @@ class Paper(db.Model):
     
     def __repr__(self):
         return '<Paper {}>'.format(self.title)
+
+class Announcement(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.Date, index=True, default=datetime.utcnow)
+    text = db.Column(db.String(512))
+
+    # Relationships
+    announcer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    announcer = db.relationship('User', backref='anns',
+                                foreign_keys=[announcer_id])
+
+    # def __repr__(self):
+    #     return '{}: {}'.format(self.announcer, self.text)
