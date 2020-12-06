@@ -104,7 +104,7 @@ class Paper(db.Model):
 
 class Announcement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.Date, index=True, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     text = db.Column(db.String(512))
 
     # Relationships

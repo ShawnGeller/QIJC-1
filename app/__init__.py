@@ -8,7 +8,7 @@ from flask_bootstrap import Bootstrap
 from flask_session import Session
 
 db = SQLAlchemy()
-migrate = Migrate()
+migrate = Migrate(compare_type=True)
 login = LoginManager()
 login.login_view = 'auth.login'
 mail = Mail()
