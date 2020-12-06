@@ -109,8 +109,8 @@ class Announcement(db.Model):
 
     # Relationships
     announcer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    announcer = db.relationship('User', backref='anns',
-                                foreign_keys=[announcer_id])
+    # announcer = db.relationship('User', backref='anns',
+    #                             foreign_keys=[announcer_id])
 
     # def __repr__(self):
     #     return '{}: {}'.format(self.announcer, self.text)
