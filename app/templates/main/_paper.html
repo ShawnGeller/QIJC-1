@@ -23,6 +23,9 @@
       <span class='title'>{{ paper.title }}</span><br>
       {{ paper.authors }}<br>
       <a href='{{ paper.link }}' target='_blank'>{{ paper.link }}</a><br>
+    {% if paper.pdf_url is not none %}
+        <a href='{{ paper.pdf_url }}' target='_blank'>{{ paper.pdf_url }}</a><br>
+    {% endif %}
       {{ paper.abstract|replace('\\\\', '\\') }}<br>
       {% if showsub %}{% if paper.comment %}{% set comment = paper.comment.split('\n') %}
 	<div class='comment'><span style='font-weight: bold;'>Comments:<br>

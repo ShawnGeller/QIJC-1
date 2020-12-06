@@ -13,12 +13,13 @@ from flask_login import (current_user, login_user, logout_user,
                          login_required)
 from app.models import User, Paper, Announcement
 from sqlalchemy import cast, Float
-from app.main.scraper import Scraper
 from app.email import send_abstracts
 from textwrap import dedent
-import logging
+import re
+import arxiv
 
-last_month = datetime.today() - timedelta(days = 30)
+last_month = datetime.today() - timedelta(days=30)
+
 
 @bp.route('/')
 @bp.route('/index')
@@ -55,40 +56,58 @@ def announce():
     return render_template('main/announce.html', form=form, title='Announcement')
 
 
+
 @bp.route('/submit', methods=['GET', 'POST'])
 @login_required
 def submit():
     form = PaperSubmissionForm()
     if form.submit.data and form.validate_on_submit():
-        link_str = form.link.data.split('?')[0].split('.pdf')[0]
-        scraper = Scraper()
-        scraper.get(link_str)
-        if scraper.failed:
-            flash('Scraping failed, submit manually.')
-            return redirect(url_for('main.submit_m'))
-        if scraper.error:
-            flash('Scraping error, check link or submit manually.')
+        # link_str = form.link.data.split('?')[0].split('.pdf')[0]
+        link_str = form.link.data
+        m = re.match(".*/([0-9.]+\d).*", link_str)
+        if m is not None:
+            id = m.groups()[0]
+        else:
+            flash("Please correct the link and try again.")
             return redirect(url_for('main.submit'))
-        authors = ", ".join(scraper.authors)
-        abstract = scraper.abstract
-        title = scraper.title
+        try:
+            q = arxiv.query(id_list=[id])[0]
+        except:
+            flash('Scraping error, check link or submit manually.')
+            return redirect(url_for('main.submit_m'))
+        authors = q['authors']
+        title = q['title']
+        abstract = q['summary']
+        # scraper = Scraper()
+        # scraper.get(link_str)
+        # if scraper.failed:
+        #     flash('Scraping failed, submit manually.')
+        #     return redirect(url_for('main.submit_m'))
+        # if scraper.error:
+        #     flash('Scraping error, check link or submit manually.')
+        #     return redirect(url_for('main.submit'))
+        authors = ", ".join(authors)
         if form.comments.data:
             comment_ = (str(current_user.firstname) + ': '
                         + form.comments.data)
         else:
             comment_ = None
-        p = Paper(link=link_str, subber=current_user,
-                  authors=authors, abstract=scraper.abstract,
-                  title=scraper.title, comment=comment_)
+        p = Paper(link=q['arxiv_url'], subber=current_user,
+                  authors=authors, abstract=abstract,
+                  title=title, comment=comment_, pdf_url=q['pdf_url'])
         db.session.add(p)
         db.session.commit()
-        if form.volunteering.data:
+        if form.volunteering.data == 'now':
             Paper.query.filter_by(
                 link=link_str).first().volunteer = current_user
             db.session.commit()
+        elif form.volunteering.data == 'later':
+            Paper.query.filter_by(
+                link=link_str).first().vol_later = current_user
+            db.session.commit()
         flash('Paper submitted.')
         return redirect(url_for('main.submit'))
-    papers = (Paper.query.filter(Paper.voted==None)
+    papers = (Paper.query.filter(Paper.voted == None)
               .order_by(Paper.timestamp.desc()).all())
     editform = FullEditForm(edits=range(len(papers)))
     editforms = list(zip(papers, editform.edits))
@@ -113,9 +132,10 @@ def submit():
         db.session.commit()
         return redirect(url_for('main.submit'))
     return render_template('main/submit.html', form=form,
-                            title='Submit Paper', showsub=True,
-                            editform=editform,
-                            editforms=editforms, extras=True)
+                           title='Submit Paper', showsub=True,
+                           editform=editform,
+                           editforms=editforms, extras=True)
+
 
 @bp.route('/submit_m', methods=['GET', 'POST'])
 @login_required
@@ -137,14 +157,16 @@ def submit_m():
     return render_template('main/submit_m.html', papers=papers,
                            form=form, title='Submit Paper', showsub=True)
 
+
 @bp.route('/vote', methods=['GET', 'POST'])
 @login_required
 def vote():
     papers_v = (Paper.query.filter(Paper.voted==None)
               .filter(Paper.volunteer_id != None)
-              .order_by(Paper.timestamp.desc()).all())
+              .order_by(Paper.timestamp.asc()).all())
     papers_ = (Paper.query.filter(Paper.voted==None)
-               .order_by(Paper.timestamp.desc()).all())
+               .filter(Paper.volunteer_id == None)
+               .order_by(Paper.timestamp.asc()).all())
     papers = papers_v + papers_
     voteform = FullVoteForm(votes=range(len(papers)))
     voteforms = list(zip(papers, voteform.votes))
@@ -153,8 +175,7 @@ def vote():
         logging.log(0, "here")
         paper = voteforms[i][0]
         data = voteform.data['votes'][i]
-        if data['vote_num'] and voteform.submit.data: #val on num
-            logging.log(0, "there")
+        if data['vote_num'] and voteform.submit.data:  # val on num
             paper.score_n = data['vote_num']
             paper.score_d = data['vote_den']
             paper.voted = datetime.now().date()
@@ -168,6 +189,7 @@ def vote():
         'main/vote.html', title='Vote', showsub=True, voteform=voteform,
         voteforms=voteforms, extras=True
     )
+
 
 @bp.route('/user/<username>', methods=['GET', 'POST'])
 @login_required
@@ -189,6 +211,7 @@ def user(username):
                            subs=subs, showsub=False, form2=form2,
                            current_user=current_user)
 
+
 @bp.route('/history')
 @login_required
 def history():
@@ -200,9 +223,9 @@ def history():
             session.pop(i, None)
     week = request.args.get('week', None)
     if week:
-        papers = (Paper.query.filter_by(voted = week)
-                      .order_by(cast(Paper.score_n, Float)
-                                /cast(Paper.score_d, Float)).all())
+        papers = (Paper.query.filter_by(voted=week)
+                  .order_by(cast(Paper.score_n, Float)
+                            / cast(Paper.score_d, Float)).all())
         papers.reverse()
         return render_template('main/history.html', papers=papers,
                                showvote=True, showsub=True)
@@ -212,13 +235,18 @@ def history():
     weeks.reverse()
     return render_template('main/history.html', weeks=weeks)
 
+
 @bp.route('/search', methods=['GET', 'POST'])
 @login_required
 def search():
     form = SearchForm()
     form.subber.choices = form.presenter.choices = ([(None, 'None')]
-                                + [(u.id, u.firstname+' '+u.lastname[0])
-                            for u in User.query.order_by('firstname')])
+                                                    + [(u.id,
+                                                        u.firstname + ' ' +
+                                                        u.lastname[0])
+                                                       for u in
+                                                       User.query.order_by(
+                                                           'firstname')])
     if form.validate_on_submit():
         query = Paper.query
         needles = []
@@ -230,17 +258,17 @@ def search():
             needles.append((Paper.authors, form.authors.data))
         if form.abstract.data:
             needles.append((Paper.abstract, form.abstract.data))
-        if form.sub_date.data and (form.sub_date.data!=''):
+        if form.sub_date.data and (form.sub_date.data != ''):
             dates = [datetime.strptime(i, '%d/%M/%Y') for i in
                      form.sub_date.data.split('-')]
             d_queries.append((Paper.timestamp, dates[0], dates[1]))
-        if form.vote_date.data and (form.vote_date.data!=''):
+        if form.vote_date.data and (form.vote_date.data != ''):
             dates = [datetime.strptime(i, '%d/%M/%Y') for i in
                      form.vote_date.data.split('-')]
             d_queries.append((Paper.voted, dates[0], dates[1]))
-        if form.subber.data and (form.subber.data!='None'):
+        if form.subber.data and (form.subber.data != 'None'):
             u_queries.append((Paper.subber_id, form.subber.data))
-        if form.presenter.data and (form.presenter.data!='None'):
+        if form.presenter.data and (form.presenter.data != 'None'):
             u_queries.append((Paper.volunteer_id, form.presenter.data))
         for needle in needles:
             query = query.filter(needle[0].ilike(f'%{needle[1]}%'))
@@ -248,11 +276,12 @@ def search():
             query = query.filter(d_query[0] >= d_query[1],
                                  d_query[0] <= d_query[2])
         for u_query in u_queries:
-            query = query.filter(u_query[0]==u_query[1])
+            query = query.filter(u_query[0] == u_query[1])
         papers = query.order_by(Paper.timestamp.desc()).all()
         return render_template('main/search.html', papers=papers,
                                form=form, showsub=True)
     return render_template('main/search.html', form=form)
+
 
 @bp.route('/comment', methods=['GET', 'POST'])
 @login_required
@@ -268,7 +297,8 @@ def comment():
         db.session.commit()
         return redirect(url_for('main.submit'))
     return render_template('main/comment.html', form=form, paper=paper,
-                               title='Comment')
+                           title='Comment')
+
 
 @bp.route('/message', methods=['GET', 'POST'])
 @login_required
@@ -279,11 +309,11 @@ def message():
         e_from = '[' + form.e_from.data + ']'
         body = form.body.data
         attach = form.abstracts.data
-        papers_v = (Paper.query.filter(Paper.voted==None)
-                .filter(Paper.volunteer_id != None)
-                .order_by(Paper.timestamp.desc()).all())
-        papers_ = (Paper.query.filter(Paper.voted==None)
-                .order_by(Paper.timestamp.desc()).all())
+        papers_v = (Paper.query.filter(Paper.voted == None)
+                    .filter(Paper.volunteer_id != None)
+                    .order_by(Paper.timestamp.desc()).all())
+        papers_ = (Paper.query.filter(Paper.voted == None)
+                   .order_by(Paper.timestamp.desc()).all())
         papers = papers_v + papers_
         send_abstracts(e_from, subject, body, papers)
     bodydefault = dedent('''    The abstracts for this week are attached.
@@ -294,4 +324,12 @@ def message():
     '''.format(current_user.firstname))
     form.body.data = bodydefault
     return render_template('main/message.html', form=form,
-                            bodydefault=bodydefault)
+                           bodydefault=bodydefault)
+
+@bp.route('/announce', methods=['GET', 'POST'])
+@login_required
+def announce():
+    if not current_user.admin:
+        flash('Admin privilege required to announce.')
+        return redirect(url_for('main.index'))
+    form = AnnoucementForm()

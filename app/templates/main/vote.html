@@ -12,10 +12,11 @@
       <div class='vote' id="vote-form-{{ j }}">
 	Vote: {{ i[1].vote_num(size=1, class_="vote-num") }} / {{ i[1].vote_den(size=1, class_="vote-den") }}
           <button class="vote-button" type="button"
-                  onclick="this.disabled=true;
+                  onclick="this.readOnly=true;
                   for (let node of this.parentNode.childNodes){
-                      node.disabled=true;
-                  }" >Vote</button>
+                      node.readOnly=true;
+                  }
+                  this.style.display = 'none';" >Vote</button>
 </div></div>
 {% endfor %}
 <br>
@@ -29,7 +30,7 @@
         for (let denominator of denominators) {
             denominator.addEventListener('input', function(){
                 for (let d of denominators) {
-                    if (d.disabled===false) {
+                    if (d.readOnly===false) {
                         d.value = denominator.value;
                     }
                 }
