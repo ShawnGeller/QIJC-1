@@ -44,7 +44,8 @@ class PaperSubmissionForm(FlaskForm):
         'Volunteer',
         choices=[('now', "I'm volunteering to discuss this paper now"),
                  ('later', "I'm volunteering to discuss this paper later"),
-                 ('not_vol', "I'm not volunteering to discuss this paper")]
+                 ('not_vol', "I'm not volunteering to discuss this paper")],
+        default='not_vol',
     )
     comments = TextAreaField('Comments (optional)')
     submit = SubmitField('Submit URL')
