@@ -155,12 +155,9 @@ def manage():
                 user.retired = False
                 db.session.commit()
             elif form.action3_.data == 'del':
-                flash(form.user_.data)
-                flash(User.query.get(form.user_.data))
-                print(form.user_.data)
-                print(User.query.get(form.user_.data))
                 db.session.delete(User.query.get(form.user_.data))
                 db.session.commit()
+                flash('Deleted {}.'.format(user.username))
             elif form.approve.data:
                 u = User.query.get(form.user_.data)
                 u.password_hash = u.password_hold
