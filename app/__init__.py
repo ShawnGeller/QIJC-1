@@ -15,6 +15,7 @@ mail = Mail()
 bootstrap = Bootstrap()
 session = Session()
 
+
 def create_app(config_class=Config):
     '''
     This application factory returns a Flask app

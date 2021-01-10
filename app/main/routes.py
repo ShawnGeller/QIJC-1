@@ -1,25 +1,34 @@
+import os
+import re
+from datetime import datetime, timedelta
+from textwrap import dedent
+
+import arxiv
+import PyPDF2
+from PyPDF2 import PdfFileReader
+import imghdr
+
+from flask import (Flask, render_template, request,
+                   flash, redirect, url_for, session, abort, Markup,
+                   send_from_directory, current_app)
+from flask_login import (current_user, login_user, logout_user, login_required)
+from sqlalchemy import cast, Float
+from werkzeug.utils import secure_filename
+from werkzeug.urls import url_parse
+
 from app import db
 from app.main import bp
-from flask import (Flask, render_template, request,
-                   flash, redirect, url_for, session, abort, Markup)
-from datetime import datetime, timedelta
-from werkzeug.urls import url_parse
 from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullVoteForm, SearchForm,
                             FullEditForm, CommentForm, MessageForm,
                             AnnouncementForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm
-from flask_login import (current_user, login_user, logout_user,
-                         login_required)
 from app.models import User, Paper, Announcement
-from sqlalchemy import cast, Float
 from app.email import send_abstracts
-from textwrap import dedent
-import re
-import arxiv
-import textile
 
 last_month = datetime.today() - timedelta(days=30)
+
+
 
 
 @bp.route('/')
@@ -79,14 +88,6 @@ def submit():
         authors = q['authors']
         title = q['title']
         abstract = q['summary']
-        # scraper = Scraper()
-        # scraper.get(link_str)
-        # if scraper.failed:
-        #     flash('Scraping failed, submit manually.')
-        #     return redirect(url_for('main.submit_m'))
-        # if scraper.error:
-        #     flash('Scraping error, check link or submit manually.')
-        #     return redirect(url_for('main.submit'))
         authors = ", ".join(authors)
         if form.comments.data:
             comment_ = (str(current_user.firstname) + ': '
@@ -326,3 +327,47 @@ def message():
     return render_template('main/message.html', form=form,
                            bodydefault=bodydefault)
 
+
+def validate_image(stream):
+    header = stream.read(512)  # 512 bytes should be enough for a header check
+    stream.seek(0)  # reset stream pointer
+    format = imghdr.what(None, header)
+    if not format:
+        return None
+    return '.' + (format if format != 'jpeg' else 'jpg')
+
+
+@bp.route('/upload')
+def upload():
+    files = os.listdir(current_app.config['UPLOAD_PATH'])
+    return render_template('main/upload.html', files=files)
+
+
+@bp.route('/upload', methods=['POST'])
+def upload_files():
+    uploaded_file = request.files['file']
+    filename = secure_filename(uploaded_file.filename)
+    if filename != '':
+        file_ext = os.path.splitext(filename)[1]
+        if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+            print("Invalid File extension, valid extensions are "
+                  ".jpg, .png, .gif, .pdf")
+            abort(400)
+        if (file_ext != ".pdf"):
+            if (file_ext != validate_image(uploaded_file.stream)):
+                print("Invalid Image")
+                abort(400)
+        # else:
+        #     try:
+        #         doc = PdfFileReader(uploaded_file)
+        #         print(doc.getNumPages())
+        #     except PyPDF2.utils.PdfReadError:
+        #         print("Invalid PDF")
+        #         abort(400)
+        uploaded_file.save(os.path.join(current_app.config['UPLOAD_PATH'], filename))
+    return redirect(url_for('main.upload'))
+
+
+@bp.route('/download/<filename>')
+def download(filename):
+    return send_from_directory(current_app.config['UPLOAD_PATH'], filename, as_attachment=True)
