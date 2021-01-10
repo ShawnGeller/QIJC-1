@@ -357,13 +357,14 @@ def upload_files():
             if (file_ext != validate_image(uploaded_file.stream)):
                 print("Invalid Image")
                 abort(400)
-        # else:
-        #     try:
-        #         doc = PdfFileReader(uploaded_file)
-        #         print(doc.getNumPages())
-        #     except PyPDF2.utils.PdfReadError:
-        #         print("Invalid PDF")
-        #         abort(400)
+        else:
+            try:
+                doc = PdfFileReader(uploaded_file)
+                print(doc.getNumPages())
+            except PyPDF2.utils.PdfReadError:
+                print("Invalid PDF")
+                abort(400)
+        uploaded_file.seek(0)
         uploaded_file.save(os.path.join(current_app.config['UPLOAD_PATH'], filename))
     return redirect(url_for('main.upload'))
 
