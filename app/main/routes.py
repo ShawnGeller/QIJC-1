@@ -1,5 +1,6 @@
 import os
 import re
+import uuid
 from datetime import datetime, timedelta
 from textwrap import dedent
 
@@ -23,7 +24,7 @@ from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullEditForm, CommentForm, MessageForm,
                             AnnouncementForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm
-from app.models import User, Paper, Announcement
+from app.models import User, Paper, Announcement, Upload
 from app.email import send_abstracts
 
 last_month = datetime.today() - timedelta(days=30)
@@ -208,9 +209,13 @@ def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     subs = (Paper.query.filter_by(subber=user)
             .order_by(Paper.timestamp.desc()))[:10]
+    vols = (Paper.query.filter_by(volunteer=user)
+            .order_by(Paper.timestamp.desc()))[:10]
+    ups = (Upload.query.filter_by(uploader_id=user)
+            .order_by(Paper.timestamp.desc()))[:10]
     return render_template('main/user.html', user=user, form=form,
-                           subs=subs, showsub=False, form2=form2,
-                           current_user=current_user)
+                           subs=subs, showsub=False, form2=form2, ups=ups,
+                           vols=vols, current_user=current_user)
 
 
 @bp.route('/history')
@@ -348,7 +353,7 @@ def upload_files():
     uploaded_file = request.files['file']
     filename = secure_filename(uploaded_file.filename)
     if filename != '':
-        file_ext = os.path.splitext(filename)[1]
+        name, file_ext = os.path.splitext(filename)[1]
         if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
             print("Invalid File extension, valid extensions are "
                   ".jpg, .png, .gif, .pdf")
@@ -365,10 +370,23 @@ def upload_files():
                 print("Invalid PDF")
                 abort(400)
         uploaded_file.seek(0)
-        uploaded_file.save(os.path.join(current_app.config['UPLOAD_PATH'], filename))
+        s = uuid.uuid4().hex
+        s += file_ext
+        full_filename = os.path.join(current_app.config['UPLOAD_PATH'], s)
+        uploaded_file.save(full_filename)
+        up_file = Upload(
+            internal_filename=full_filename,
+            external_filename=(uuid.uuid4().hex + file_ext),
+            user_filename=filename,
+            uploader_id=current_user.get_id(),
+        )
+        db.session.add(up_file)
+        db.session.commit()
     return redirect(url_for('main.upload'))
 
 
 @bp.route('/download/<filename>')
 def download(filename):
+    file = Upload.query.filter(Upload.external_filename == filename).first()
+    filename = file.internal_filename
     return send_from_directory(current_app.config['UPLOAD_PATH'], filename, as_attachment=True)

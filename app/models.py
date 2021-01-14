@@ -1,3 +1,4 @@
+import uuid
 from flask import current_app
 from app import db, login
 from datetime import datetime, timedelta
@@ -102,6 +103,7 @@ class Paper(db.Model):
     def __repr__(self):
         return '<Paper {}>'.format(self.title)
 
+
 class Announcement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
@@ -109,8 +111,14 @@ class Announcement(db.Model):
 
     # Relationships
     announcer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    # announcer = db.relationship('User', backref='anns',
-    #                             foreign_keys=[announcer_id])
 
-    # def __repr__(self):
-    #     return '{}: {}'.format(self.announcer, self.text)
+
+class Upload(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    internal_filename = db.Column(db.String(140))
+    external_filename = db.Column(db.String(140))
+    user_filename = db.Column(db.String(140))
+
+    # Relationships
+    uploader_id = db.Column(db.Integer, db.ForeignKey('user.id'))
