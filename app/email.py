@@ -26,9 +26,10 @@ def send_password_reset_email(user):
                                          user=user, token=token))
 
 def send_abstracts(e_from, subject, body, papers):
-    recipients = db.session.query(User.email).filter(User.retired==0).all()
-#     recipients = list(db.session.query(User.email)
-#                       .filter(User.username=='austin').first())
+    recipients = db.session.query(User.email).filter(~User.retired).all()
+    recipients = [x[0] for x in recipients]
+    # recipients = list(db.session.query(User.email)
+    #                   .filter(User.username=='sgeller').first())
     send_email(subject, e_from, recipients,
                    text_body=render_template('email/snd_abstracts.txt',
                                                 papers=papers,
