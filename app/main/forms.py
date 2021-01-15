@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from flask_login import current_user
 from wtforms import (StringField, PasswordField, BooleanField,
                      SubmitField, IntegerField, FieldList, FormField,
-                     SelectField, TextAreaField, RadioField)
+                     SelectField, TextAreaField, RadioField, FileField)
 from wtforms.validators import (DataRequired, ValidationError, Email,
                                 EqualTo, Regexp)
 from app.models import User, Paper
@@ -104,6 +104,7 @@ class FullEditForm(FlaskForm):
 
 class CommentForm(FlaskForm):
     comment = TextAreaField('Comment', validators=[DataRequired()])
+    file = FileField()
     submit = SubmitField('Submit.')
 
 class AnnouncementForm(FlaskForm):

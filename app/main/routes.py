@@ -24,7 +24,7 @@ from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullEditForm, CommentForm, MessageForm,
                             AnnouncementForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm
-from app.models import User, Paper, Announcement, Upload
+from app.models import User, Paper, Announcement, Upload, Comment
 from app.email import send_abstracts
 
 last_month = datetime.today() - timedelta(days=30)
@@ -129,7 +129,7 @@ def submit():
         elif button['unsubmit']:
             db.session.delete(paper)
         elif button['comment']:
-            return redirect(url_for('main.comment', id=paper.id))
+            return redirect(url_for('main.comment_on', id=paper.id))
         else:
             continue
         db.session.commit()
@@ -289,20 +289,20 @@ def search():
     return render_template('main/search.html', form=form)
 
 
-@bp.route('/comment', methods=['GET', 'POST'])
+@bp.route('/comment_on', methods=['GET', 'POST'])
 @login_required
-def comment():
+def comment_on():
     paper = Paper.query.get(request.args.get('id'))
     form = CommentForm()
     if form.validate_on_submit():
-        comment = "\n" + current_user.firstname + ": " + form.comment.data
-        if paper.comment:
-            paper.comment = paper.comment + comment
-        else:
-            paper.comment = comment
+        uploaded_file = request.files["file"]
+        up = manage_upload(uploaded_file)
+        comment = Comment(text=form.comment.data, commenter_id=current_user.id,
+                          paper_id=paper.id, upload=up)
+        db.session.add(comment)
         db.session.commit()
         return redirect(url_for('main.submit'))
-    return render_template('main/comment.html', form=form, paper=paper,
+    return render_template('main/comment_on.html', form=form, paper=paper,
                            title='Comment')
 
 
@@ -342,15 +342,20 @@ def validate_image(stream):
     return '.' + (format if format != 'jpeg' else 'jpg')
 
 
-@bp.route('/upload')
-def upload():
-    files = os.listdir(current_app.config['UPLOAD_PATH'])
-    return render_template('main/upload.html', files=files)
+@bp.route('/uploads')
+def uploads():
+    ups = Upload.query.order_by(Upload.timestamp.desc()).all()
+    return render_template('main/uploads.html', ups=ups)
 
 
-@bp.route('/upload', methods=['POST'])
+@bp.route('/uploads', methods=['POST'])
 def upload_files():
     uploaded_file = request.files['file']
+    manage_upload(uploaded_file)
+    return redirect(url_for('main.uploads'))
+
+
+def manage_upload(uploaded_file):
     filename = secure_filename(uploaded_file.filename)
     if filename != '':
         name, file_ext = os.path.splitext(filename)
@@ -383,7 +388,7 @@ def upload_files():
         )
         db.session.add(up_file)
         db.session.commit()
-    return redirect(url_for('main.upload'))
+        return up_file
 
 
 @bp.route('/download/<filename>')

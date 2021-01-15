@@ -23,6 +23,9 @@ class User(UserMixin, db.Model):
     retired = db.Column(db.Boolean, default=False)
     hp = db.Column(db.Integer, default=0)
 
+    uploads = db.relationship("Upload", backref='uploader', lazy=True)
+    comments = db.relationship("Comment", backref='commenter', lazy=True)
+
     def __repr__(self):
         return '<User {}>'.format(self.username)
 
@@ -75,6 +78,7 @@ class User(UserMixin, db.Model):
         hp = int(hp)
         return hp
 
+
 class Paper(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140))
@@ -86,7 +90,7 @@ class Paper(db.Model):
     voted = db.Column(db.Date)
     score_n = db.Column(db.Integer)
     score_d = db.Column(db.Integer)
-    comment = db.Column(db.String(256))
+    # comment = db.Column(db.String(256))
     
     # Relationships
     subber_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -99,9 +103,21 @@ class Paper(db.Model):
                              foreign_keys=[volunteer_id])
     vol_later = db.relationship('User', backref='later_vols',
                                  foreign_keys=[vol_later_id])
-    
+    comments = db.relationship("Comment", backref='paper', lazy=True)
+
     def __repr__(self):
         return '<Paper {}>'.format(self.title)
+
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    text = db.Column(db.String(512))
+    commenter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    paper_id = db.Column(db.Integer, db.ForeignKey('paper.id'), nullable=False)
+
+    # Relationships
+    upload = db.relationship("Upload", backref='comment', uselist=False)
 
 
 class Announcement(db.Model):
@@ -123,4 +139,4 @@ class Upload(db.Model):
 
     # Relationships
     uploader_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    uploader = db.relationship('User', backref='upps', foreign_keys=[uploader_id])
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)

@@ -2,10 +2,12 @@
 
 {% block app_content %}
 {% include 'main/_paper.html' %}
-<form action='' method='post'>
+<form action='' method='post' enctype="multipart/form-data">
 {{ form.hidden_tag() }}
 {{ form.comment.label }}<br>
 {{ form.comment(size=64, style="height: 100px;width: 400px;") }}<br>
+    Allowed filetypes are jpg, png, gif, pdf
+{{ form.file() }}<br>
 {{ form.submit() }}
 </form>
 {% endblock %}
