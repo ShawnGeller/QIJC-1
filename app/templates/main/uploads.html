@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% block app_content %}
-<title>File Upload</title>
-</head>
-<body>
-<h1>File Upload</h1>
-<form method="POST" action="" enctype="multipart/form-data">
-    <p>Allowed filetypes are jpg, png, gif, pdf<input type="file" name="file"></p>
-    <p><input type="submit" value="Submit"></p>
-</form>
-{% for up_file in ups %}
-    {{ up_file.uploader.username }} submitted on {{ up_file.timestamp.date() }}: <a href="{{ url_for('main.download', filename=up_file.external_filename) }}">{{ up_file.user_filename }}</a><br>
-{% endfor %}
+    <title>Under Construction</title>
+{#<title>File Upload</title>#}
+{#<body>#}
+{#<h1>File Upload</h1>#}
+{#<form method="POST" action="" enctype="multipart/form-data">#}
+{#    <p>Allowed filetypes are jpg, png, gif, pdf<input type="file" name="file"></p>#}
+{#    <p><input type="submit" value="Submit"></p>#}
+{#</form>#}
+{#{% for up_file in ups %}#}
+{#    {{ up_file.uploader.username }} submitted on {{ up_file.timestamp.date() }}: <a href="{{ url_for('main.download', filename=up_file.external_filename) }}">{{ up_file.user_filename }}</a><br>#}
+{#{% endfor %}#}
 {% endblock %}

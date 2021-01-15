@@ -28,8 +28,8 @@
     <p>
       {{ form.comments.label }}<br>
       {{ form.comments(size=64, style="width: 400px;") }}<br>
-            Allowed filetypes are jpg, png, gif, pdf
-        {{ form.attachment() }}<br>
+{#            Allowed filetypes are jpg, png, gif, pdf#}
+{#        {{ form.attachment() }}<br>#}
       {% for error in form.comments.errors %}
 	<span style='color: red;'>[{{ error }}]</span>
       {% endfor %}
