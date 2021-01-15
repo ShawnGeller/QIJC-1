@@ -90,14 +90,15 @@ def submit():
         title = q['title']
         abstract = q['summary']
         authors = ", ".join(authors)
-        if form.comments.data:
-            comment_ = (str(current_user.firstname) + ': '
-                        + form.comments.data)
-        else:
-            comment_ = None
         p = Paper(link=q['arxiv_url'], subber=current_user,
                   authors=authors, abstract=abstract,
-                  title=title, comment=comment_, pdf_url=q['pdf_url'])
+                  title=title, pdf_url=q['pdf_url'])
+        if form.comments.data:
+            comment = Comment(text=form.comment.data, commenter_id=current_user.id,
+                            paper_id=paper.id, upload=up)
+            db.session.add(comment)
+        uploaded_file = request.files["file"]
+        up = manage_upload(uploaded_file)
         db.session.add(p)
         db.session.commit()
         if form.volunteering.data == 'now':
@@ -355,7 +356,7 @@ def upload_files():
     return redirect(url_for('main.uploads'))
 
 
-def manage_upload(uploaded_file):
+def manage_upload(uploaded_file, comment=None):
     filename = secure_filename(uploaded_file.filename)
     if filename != '':
         name, file_ext = os.path.splitext(filename)
@@ -380,11 +381,16 @@ def manage_upload(uploaded_file):
         s += file_ext
         full_filename = os.path.join(current_app.config['UPLOAD_PATH'], s)
         uploaded_file.save(full_filename)
+        if comment:
+            comment_id = comment.id
+        else:
+            comment_id = None
         up_file = Upload(
             internal_filename=s,
             external_filename=(uuid.uuid4().hex + file_ext),
             user_filename=filename,
             uploader_id=current_user.get_id(),
+            comment_id=comment_id,
         )
         db.session.add(up_file)
         db.session.commit()

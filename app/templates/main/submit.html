@@ -2,7 +2,7 @@
 
 {% block app_content %}
   <h1>Submit Paper</h1>
-  <form action='' method='post'>
+  <form action='' method='post' enctype="multipart/form-data">
     {{ form.hidden_tag() }}
 
     {% macro errors(source) -%}
@@ -28,6 +28,8 @@
     <p>
       {{ form.comments.label }}<br>
       {{ form.comments(size=64, style="width: 400px;") }}<br>
+            Allowed filetypes are jpg, png, gif, pdf
+        {{ form.attachment() }}<br>
       {% for error in form.comments.errors %}
 	<span style='color: red;'>[{{ error }}]</span>
       {% endfor %}

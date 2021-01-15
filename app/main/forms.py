@@ -49,6 +49,7 @@ class PaperSubmissionForm(FlaskForm):
     )
     comments = TextAreaField('Comments (optional)')
     submit = SubmitField('Submit URL')
+    attachment = FileField()
 
     def validate_link(self, link):
         # Validate arxiv.org
