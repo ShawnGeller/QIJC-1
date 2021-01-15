@@ -38,7 +38,7 @@ Sum points: {{ user.sumpoints() }}<br>
 <hr>
 <h3>My recent uploads</h3>
 {% for up_file in ups %}
-<a href="{{ url_for('download', filename=up_file.external_filename) }}">{{ up_file.user_filename }}</a>
+<a href="{{ url_for('main.download', filename=up_file.external_filename) }}">{{ up_file.user_filename }}</a><br>
 {% endfor %}
 <h3>My recent volunteers</h3>
 {% for paper in vols %}

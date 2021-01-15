@@ -111,6 +111,7 @@ class Announcement(db.Model):
 
     # Relationships
     announcer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    announcer = db.relationship('User', backref='anns', foreign_keys=[announcer_id])
 
 
 class Upload(db.Model):
@@ -122,3 +123,4 @@ class Upload(db.Model):
 
     # Relationships
     uploader_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    uploader = db.relationship('User', backref='upps', foreign_keys=[uploader_id])

@@ -211,8 +211,8 @@ def user(username):
             .order_by(Paper.timestamp.desc()))[:10]
     vols = (Paper.query.filter_by(volunteer=user)
             .order_by(Paper.timestamp.desc()))[:10]
-    ups = (Upload.query.filter_by(uploader_id=user)
-            .order_by(Paper.timestamp.desc()))[:10]
+    ups = (Upload.query.filter_by(uploader=user)
+            .order_by(Upload.timestamp.desc()))[:10]
     return render_template('main/user.html', user=user, form=form,
                            subs=subs, showsub=False, form2=form2, ups=ups,
                            vols=vols, current_user=current_user)
@@ -353,7 +353,8 @@ def upload_files():
     uploaded_file = request.files['file']
     filename = secure_filename(uploaded_file.filename)
     if filename != '':
-        name, file_ext = os.path.splitext(filename)[1]
+        name, file_ext = os.path.splitext(filename)
+        file_ext = file_ext.lower()
         if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
             print("Invalid File extension, valid extensions are "
                   ".jpg, .png, .gif, .pdf")
@@ -375,7 +376,7 @@ def upload_files():
         full_filename = os.path.join(current_app.config['UPLOAD_PATH'], s)
         uploaded_file.save(full_filename)
         up_file = Upload(
-            internal_filename=full_filename,
+            internal_filename=s,
             external_filename=(uuid.uuid4().hex + file_ext),
             user_filename=filename,
             uploader_id=current_user.get_id(),
@@ -387,6 +388,7 @@ def upload_files():
 
 @bp.route('/download/<filename>')
 def download(filename):
+    print(Upload.query.filter(Upload.external_filename == filename).first().internal_filename)
     file = Upload.query.filter(Upload.external_filename == filename).first()
     filename = file.internal_filename
     return send_from_directory(current_app.config['UPLOAD_PATH'], filename, as_attachment=True)
