@@ -93,13 +93,21 @@ def submit():
         p = Paper(link=q['arxiv_url'], subber=current_user,
                   authors=authors, abstract=abstract,
                   title=title, pdf_url=q['pdf_url'])
-        if form.comments.data:
-            comment = Comment(text=form.comment.data, commenter_id=current_user.id,
-                            paper_id=paper.id, upload=up)
-            db.session.add(comment)
-        uploaded_file = request.files["file"]
-        up = manage_upload(uploaded_file)
         db.session.add(p)
+        db.session.commit()
+        uploaded_file = request.files["attachment"]
+        up = manage_upload(uploaded_file)
+        if form.comments.data:
+            c_text = form.comments.data
+        elif up:
+            c_text = ""
+        else:
+            c_text = None
+        if c_text is not None:
+            comment = Comment(text=c_text, commenter_id=current_user.id, paper_id=p.id, upload=up)
+            db.session.add(comment)
+            if up:
+                up.comment_id = comment.id
         db.session.commit()
         if form.volunteering.data == 'now':
             Paper.query.filter_by(
@@ -128,6 +136,9 @@ def submit():
             elif paper.vol_later:
                 paper.vol_later = None
         elif button['unsubmit']:
+            p_comms = Comment.query.filter(Comment.paper_id == paper.id).all()
+            for comment in p_comms:
+                db.session.delete(comment)
             db.session.delete(paper)
         elif button['comment']:
             return redirect(url_for('main.comment_on', id=paper.id))
