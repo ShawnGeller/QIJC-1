@@ -104,7 +104,12 @@ def submit():
         else:
             c_text = None
         if c_text is not None:
-            comment = Comment(text=c_text, commenter_id=current_user.id, paper_id=p.id, upload=up)
+            comment = Comment(
+                text=c_text,
+                commenter_id=current_user.id,
+                paper_id=p.id,
+                # upload=up,
+            )
             db.session.add(comment)
             # if up:
             #     up.comment_id = comment.id
