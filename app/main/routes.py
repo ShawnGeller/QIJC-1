@@ -162,10 +162,32 @@ def submit():
 def submit_m():
     form = ManualSubmissionForm()
     if form.validate_on_submit():
-        p = Paper(link=form.link.data, subber=current_user,
-                  authors=form.authors.data, abstract=form.abstract.data,
-                  title=form.title.data, comment=form.comments.data)
+        p = Paper(
+            link=form.link.data,
+            subber=current_user,
+            authors=form.authors.data,
+            abstract=form.abstract.data,
+            title=form.title.data,
+        )
         db.session.add(p)
+        # uploaded_file = request.files["attachment"]
+        # up = manage_upload(uploaded_file)
+        if form.comments.data:
+            c_text = form.comments.data
+        # elif up:
+        #     c_text = ""
+        else:
+            c_text = None
+        if c_text is not None:
+            comment = Comment(
+                text=c_text,
+                commenter_id=current_user.id,
+                paper_id=p.id,
+                # upload=up,
+            )
+            db.session.add(comment)
+            # if up:
+            #     up.comment_id = comment.id
         db.session.commit()
         if form.volunteering.data:
             Paper.query.filter_by(
