@@ -386,12 +386,14 @@ def validate_image(stream):
 
 
 @bp.route('/uploads')
+@login_required
 def uploads():
     ups = Upload.query.order_by(Upload.timestamp.desc()).all()
     return render_template('main/uploads.html', ups=ups)
 
 
 @bp.route('/uploads', methods=['POST'])
+@login_required
 def upload_files():
     uploaded_file = request.files['file']
     manage_upload(uploaded_file)
@@ -440,6 +442,7 @@ def manage_upload(uploaded_file, comment=None):
 
 
 @bp.route('/download/<filename>')
+@login_required
 def download(filename):
     print(Upload.query.filter(Upload.external_filename == filename).first().internal_filename)
     file = Upload.query.filter(Upload.external_filename == filename).first()
