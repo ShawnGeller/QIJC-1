@@ -3,7 +3,8 @@ from flask_wtf import FlaskForm
 from flask_login import current_user
 from wtforms import (StringField, PasswordField, BooleanField,
                      SubmitField, IntegerField, FieldList, FormField,
-                     SelectField, TextAreaField, RadioField, FileField)
+                     SelectField, TextAreaField, RadioField, FileField,
+                     HiddenField)
 from wtforms.validators import (DataRequired, ValidationError, Email,
                                 EqualTo, Regexp)
 from app.models import User, Paper
@@ -57,21 +58,29 @@ class PaperSubmissionForm(FlaskForm):
             raise ValidationError('Only arxiv.org links are accepted.'
                                   + 'Consider submitting manually.')
 
+        # TODO: Fix this validation.
         # Validate uniqueness among non-voted papers
         link_str = link.data.split('?')[0]
         paper = (Paper.query.filter(Paper.voted==None)
                  .filter_by(link=link_str).first())
         if paper is not None:
-            print('Validation error raised.')
             raise ValidationError('Link already submitted.')
 
 class ManualSubmissionForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     link = StringField('Link', validators=[DataRequired()])
     authors = StringField('Authors', validators=[DataRequired()])
-    abstract = StringField('Abstract', validators=[DataRequired()])
-    volunteering = BooleanField("I'm volunteering to discuss this paper.")
-    comments = StringField('Comments (optional)')
+    abstract = TextAreaField('Abstract', validators=[DataRequired()])
+    # volunteering = BooleanField("I'm volunteering to discuss this paper.")
+    volunteering = RadioField(
+        'Volunteer',
+        choices=[('now', "I'm volunteering to discuss this paper now"),
+                 ('later', "I'm volunteering to discuss this paper later"),
+                 ('not_vol', "I'm not volunteering to discuss this paper")],
+        default='not_vol',
+    )
+    comments = TextAreaField("Comments (optional)")
+    attachment = FileField()
     submit = SubmitField('Submit paper.')
 
     def validate_link(self, link):
@@ -118,7 +127,6 @@ class MessageForm(FlaskForm):
     body = TextAreaField('Body', validators=[DataRequired()])
     abstracts = BooleanField('Attach abstracts:', default=True)
     submit = SubmitField('Send.')
-
 
 class AnnoucementForm(FlaskForm):
     announcement = StringField('Announcement', validators=[DataRequired()])

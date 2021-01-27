@@ -73,7 +73,7 @@ def announce():
 def submit():
     form = PaperSubmissionForm()
     if form.submit.data and form.validate_on_submit():
-        # link_str = form.link.data.split('?')[0].split('.pdf')[0]
+        link_str = form.link.data.split('?')[0].split('.pdf')[0]
         link_str = form.link.data
         m = re.match(".*/([0-9.]+\d).*", link_str)
         if m is not None:
@@ -95,12 +95,12 @@ def submit():
                   title=title, pdf_url=q['pdf_url'])
         db.session.add(p)
         db.session.commit()
-        # uploaded_file = request.files["attachment"]
-        # up = manage_upload(uploaded_file)
+        uploaded_file = request.files["attachment"]
+        up = manage_upload(uploaded_file)
         if form.comments.data:
             c_text = form.comments.data
-        # elif up:
-        #     c_text = ""
+        elif up:
+            c_text = ""
         else:
             c_text = None
         if c_text is not None:
@@ -108,11 +108,11 @@ def submit():
                 text=c_text,
                 commenter_id=current_user.id,
                 paper_id=p.id,
-                # upload=up,
+                upload=up,
             )
             db.session.add(comment)
-            # if up:
-            #     up.comment_id = comment.id
+            if up:
+                up.comment_id = comment.id
         db.session.commit()
         if form.volunteering.data == 'now':
             Paper.query.filter_by(
@@ -138,7 +138,7 @@ def submit():
         elif button['unvolunteer']:
             if paper.volunteer:
                 paper.volunteer = None
-            elif paper.vol_later:
+            if paper.vol_later:
                 paper.vol_later = None
         elif button['unsubmit']:
             p_comms = Comment.query.filter(Comment.paper_id == paper.id).all()
@@ -162,20 +162,29 @@ def submit():
 def submit_m():
     form = ManualSubmissionForm()
     if form.validate_on_submit():
+        link_str = form.link.data
         p = Paper(
-            link=form.link.data,
+            link=link_str,
             subber=current_user,
             authors=form.authors.data,
             abstract=form.abstract.data,
             title=form.title.data,
         )
+        if form.volunteering.data == 'now':
+            Paper.query.filter_by(
+                link=link_str).first().volunteer = current_user
+            db.session.commit()
+        elif form.volunteering.data == 'later':
+            Paper.query.filter_by(
+                link=link_str).first().vol_later = current_user
+            db.session.commit()
         db.session.add(p)
-        # uploaded_file = request.files["attachment"]
-        # up = manage_upload(uploaded_file)
+        uploaded_file = request.files["attachment"]
+        up = manage_upload(uploaded_file)
         if form.comments.data:
             c_text = form.comments.data
-        # elif up:
-        #     c_text = ""
+        elif up:
+            c_text = ""
         else:
             c_text = None
         if c_text is not None:
@@ -183,11 +192,11 @@ def submit_m():
                 text=c_text,
                 commenter_id=current_user.id,
                 paper_id=p.id,
-                # upload=up,
+                upload=up,
             )
             db.session.add(comment)
-            # if up:
-            #     up.comment_id = comment.id
+            if up:
+                up.comment_id = comment.id
         db.session.commit()
         if form.volunteering.data:
             Paper.query.filter_by(
@@ -334,13 +343,13 @@ def comment_on():
     paper = Paper.query.get(request.args.get('id'))
     form = CommentForm()
     if form.validate_on_submit():
-        # uploaded_file = request.files["file"]
-        # up = manage_upload(uploaded_file)
+        uploaded_file = request.files["file"]
+        up = manage_upload(uploaded_file)
         comment = Comment(
             text=form.comment.data,
             commenter_id=current_user.id,
             paper_id=paper.id,
-            # upload=up,
+            upload=up,
         )
         db.session.add(comment)
         db.session.commit()

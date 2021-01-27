@@ -28,8 +28,8 @@
     <p>
       {{ form.comments.label }}<br>
       {{ form.comments(size=64, style="width: 400px;") }}<br>
-{#            Allowed filetypes are jpg, png, gif, pdf#}
-{#        {{ form.attachment() }}<br>#}
+            Allowed filetypes are jpg, png, gif, pdf
+        {{ form.attachment() }}<br>
       {% for error in form.comments.errors %}
 	<span style='color: red;'>[{{ error }}]</span>
       {% endfor %}
@@ -55,6 +55,9 @@
 	  {{ i[1].volunteer() }}
 	  {{ i[1].vol_later() }}
 	{% endif %}
+      {% if (i[0].vol_later==current_user) and (not i[0].volunteer) %}
+          {{ i[1].volunteer() }}
+      {% endif %}
 	{{ i[1].comment }}
       </div>
       {##}</div>
