@@ -2,7 +2,7 @@
 
 {% for paper in papers %}
 Submitter: {{ paper.subber.firstname }}
-{% if paper.volunteer is defined %}Volunteer: {{ paper.volunteer }}{% endif %}
+{% if paper.volunteer is defined %}Volunteer: {{ paper.volunteer.firstname }}{% endif %}
 {{ paper.title }}
 {{ paper.authors }}
 {{ paper.link }}

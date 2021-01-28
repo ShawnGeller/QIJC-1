@@ -6,7 +6,7 @@
 {% for paper in papers %}
 Submitter: {{ paper.subber.firstname }}<br>
 {% if paper.volunteer is not none %}
-Volunteer: {{ paper.volunteer }}<br>
+Volunteer: {{ paper.volunteer.firstname }}<br>
 {% endif %}
 <span style='font-weight: bold;'>{{ paper.title }}</span><br>
 {{ paper.authors }}<br>
