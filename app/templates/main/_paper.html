@@ -27,10 +27,16 @@
         <a href='{{ paper.pdf_url }}' target='_blank'>{{ paper.pdf_url }}</a><br>
     {% endif %}
       {{ paper.abstract|replace('\\\\', '\\') }}<br>
-      {% if showsub %}{% if paper.comment %}{% set comment = paper.comment.split('\n') %}
-	<div class='comment'><span style='font-weight: bold;'>Comments:<br>
-	  </span>{% for i in comment  %}{{ i }}<br>{% endfor %}</div>
-	{% endif %}{% endif %}
+      {% if showsub %}
+        {% if paper.comments %}
+          <div class='comment'><span style='font-weight: bold;'>Comments:<br>
+          </span>
+          {% for comment in paper.comments %}
+            {% include '/main/_comment.html' %}<br>
+          {% endfor %}
+          </div>
+        {% endif %}
+      {% endif %}
 	{% if showvote %}
 	  <span class='votes'>
 	    {{ paper.score_n }}/{{ paper.score_d }} votes.

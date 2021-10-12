@@ -14,3 +14,7 @@ def internal_error(error):
 @bp.app_errorhandler(403)
 def forbidden_error(error):
     return render_template('errors/403.html'), 403
+
+@bp.errorhandler(413)
+def too_large(e):
+    return render_template('errors/413.html'), 413

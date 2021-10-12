@@ -1,3 +1,4 @@
+import uuid
 from flask import current_app
 from app import db, login
 from datetime import datetime, timedelta
@@ -21,6 +22,9 @@ class User(UserMixin, db.Model):
     password_hold = db.Column(db.String(128))
     retired = db.Column(db.Boolean, default=False)
     hp = db.Column(db.Integer, default=0)
+
+    uploads = db.relationship("Upload", backref='uploader', lazy=True)
+    comments = db.relationship("Comment", backref='commenter', lazy=True)
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -74,6 +78,7 @@ class User(UserMixin, db.Model):
         hp = int(hp)
         return hp
 
+
 class Paper(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140))
@@ -85,7 +90,7 @@ class Paper(db.Model):
     voted = db.Column(db.Date)
     score_n = db.Column(db.Integer)
     score_d = db.Column(db.Integer)
-    comment = db.Column(db.String(256))
+    # comment = db.Column(db.String(256))
     
     # Relationships
     subber_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -98,9 +103,22 @@ class Paper(db.Model):
                              foreign_keys=[volunteer_id])
     vol_later = db.relationship('User', backref='later_vols',
                                  foreign_keys=[vol_later_id])
-    
+    comments = db.relationship("Comment", backref='paper', lazy=True)
+
     def __repr__(self):
         return '<Paper {}>'.format(self.title)
+
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    text = db.Column(db.String(512))
+    commenter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    paper_id = db.Column(db.Integer, db.ForeignKey('paper.id'), nullable=False)
+
+    # Relationships
+    upload = db.relationship("Upload", backref='comment', uselist=False)
+
 
 class Announcement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -109,8 +127,16 @@ class Announcement(db.Model):
 
     # Relationships
     announcer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    # announcer = db.relationship('User', backref='anns',
-    #                             foreign_keys=[announcer_id])
+    announcer = db.relationship('User', backref='anns', foreign_keys=[announcer_id])
 
-    # def __repr__(self):
-    #     return '{}: {}'.format(self.announcer, self.text)
+
+class Upload(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    internal_filename = db.Column(db.String(140))
+    external_filename = db.Column(db.String(140))
+    user_filename = db.Column(db.String(140))
+
+    # Relationships
+    uploader_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)

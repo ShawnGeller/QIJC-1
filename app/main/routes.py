@@ -1,25 +1,35 @@
+import os
+import re
+import uuid
+from datetime import datetime, timedelta
+from textwrap import dedent
+
+import arxiv
+import PyPDF2
+from PyPDF2 import PdfFileReader
+import imghdr
+
+from flask import (Flask, render_template, request,
+                   flash, redirect, url_for, session, abort, Markup,
+                   send_from_directory, current_app)
+from flask_login import (current_user, login_user, logout_user, login_required)
+from sqlalchemy import cast, Float
+from werkzeug.utils import secure_filename
+from werkzeug.urls import url_parse
+
 from app import db
 from app.main import bp
-from flask import (Flask, render_template, request,
-                   flash, redirect, url_for, session, abort, Markup)
-from datetime import datetime, timedelta
-from werkzeug.urls import url_parse
 from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullVoteForm, SearchForm,
                             FullEditForm, CommentForm, MessageForm,
                             AnnouncementForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm
-from flask_login import (current_user, login_user, logout_user,
-                         login_required)
-from app.models import User, Paper, Announcement
-from sqlalchemy import cast, Float
+from app.models import User, Paper, Announcement, Upload, Comment
 from app.email import send_abstracts
-from textwrap import dedent
-import re
-import arxiv
-import textile
 
 last_month = datetime.today() - timedelta(days=30)
+
+
 
 
 @bp.route('/')
@@ -79,24 +89,30 @@ def submit():
         authors = q['authors']
         title = q['title']
         abstract = q['summary']
-        # scraper = Scraper()
-        # scraper.get(link_str)
-        # if scraper.failed:
-        #     flash('Scraping failed, submit manually.')
-        #     return redirect(url_for('main.submit_m'))
-        # if scraper.error:
-        #     flash('Scraping error, check link or submit manually.')
-        #     return redirect(url_for('main.submit'))
         authors = ", ".join(authors)
-        if form.comments.data:
-            comment_ = (str(current_user.firstname) + ': '
-                        + form.comments.data)
-        else:
-            comment_ = None
         p = Paper(link=q['arxiv_url'], subber=current_user,
                   authors=authors, abstract=abstract,
-                  title=title, comment=comment_, pdf_url=q['pdf_url'])
+                  title=title, pdf_url=q['pdf_url'])
         db.session.add(p)
+        db.session.commit()
+        # uploaded_file = request.files["attachment"]
+        # up = manage_upload(uploaded_file)
+        if form.comments.data:
+            c_text = form.comments.data
+        # elif up:
+        #     c_text = ""
+        else:
+            c_text = None
+        if c_text is not None:
+            comment = Comment(
+                text=c_text,
+                commenter_id=current_user.id,
+                paper_id=p.id,
+                # upload=up,
+            )
+            db.session.add(comment)
+            # if up:
+            #     up.comment_id = comment.id
         db.session.commit()
         if form.volunteering.data == 'now':
             Paper.query.filter_by(
@@ -125,9 +141,12 @@ def submit():
             elif paper.vol_later:
                 paper.vol_later = None
         elif button['unsubmit']:
+            p_comms = Comment.query.filter(Comment.paper_id == paper.id).all()
+            for comment in p_comms:
+                db.session.delete(comment)
             db.session.delete(paper)
         elif button['comment']:
-            return redirect(url_for('main.comment', id=paper.id))
+            return redirect(url_for('main.comment_on', id=paper.id))
         else:
             continue
         db.session.commit()
@@ -143,10 +162,32 @@ def submit():
 def submit_m():
     form = ManualSubmissionForm()
     if form.validate_on_submit():
-        p = Paper(link=form.link.data, subber=current_user,
-                  authors=form.authors.data, abstract=form.abstract.data,
-                  title=form.title.data, comment=form.comments.data)
+        p = Paper(
+            link=form.link.data,
+            subber=current_user,
+            authors=form.authors.data,
+            abstract=form.abstract.data,
+            title=form.title.data,
+        )
         db.session.add(p)
+        # uploaded_file = request.files["attachment"]
+        # up = manage_upload(uploaded_file)
+        if form.comments.data:
+            c_text = form.comments.data
+        # elif up:
+        #     c_text = ""
+        else:
+            c_text = None
+        if c_text is not None:
+            comment = Comment(
+                text=c_text,
+                commenter_id=current_user.id,
+                paper_id=p.id,
+                # upload=up,
+            )
+            db.session.add(comment)
+            # if up:
+            #     up.comment_id = comment.id
         db.session.commit()
         if form.volunteering.data:
             Paper.query.filter_by(
@@ -207,9 +248,13 @@ def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     subs = (Paper.query.filter_by(subber=user)
             .order_by(Paper.timestamp.desc()))[:10]
+    vols = (Paper.query.filter_by(volunteer=user)
+            .order_by(Paper.timestamp.desc()))[:10]
+    ups = (Upload.query.filter_by(uploader=user)
+            .order_by(Upload.timestamp.desc()))[:10]
     return render_template('main/user.html', user=user, form=form,
-                           subs=subs, showsub=False, form2=form2,
-                           current_user=current_user)
+                           subs=subs, showsub=False, form2=form2, ups=ups,
+                           vols=vols, current_user=current_user)
 
 
 @bp.route('/history')
@@ -283,20 +328,24 @@ def search():
     return render_template('main/search.html', form=form)
 
 
-@bp.route('/comment', methods=['GET', 'POST'])
+@bp.route('/comment_on', methods=['GET', 'POST'])
 @login_required
-def comment():
+def comment_on():
     paper = Paper.query.get(request.args.get('id'))
     form = CommentForm()
     if form.validate_on_submit():
-        comment = "\n" + current_user.firstname + ": " + form.comment.data
-        if paper.comment:
-            paper.comment = paper.comment + comment
-        else:
-            paper.comment = comment
+        # uploaded_file = request.files["file"]
+        # up = manage_upload(uploaded_file)
+        comment = Comment(
+            text=form.comment.data,
+            commenter_id=current_user.id,
+            paper_id=paper.id,
+            # upload=up,
+        )
+        db.session.add(comment)
         db.session.commit()
         return redirect(url_for('main.submit'))
-    return render_template('main/comment.html', form=form, paper=paper,
+    return render_template('main/comment_on.html', form=form, paper=paper,
                            title='Comment')
 
 
@@ -326,3 +375,76 @@ def message():
     return render_template('main/message.html', form=form,
                            bodydefault=bodydefault)
 
+
+def validate_image(stream):
+    header = stream.read(512)  # 512 bytes should be enough for a header check
+    stream.seek(0)  # reset stream pointer
+    format = imghdr.what(None, header)
+    if not format:
+        return None
+    return '.' + (format if format != 'jpeg' else 'jpg')
+
+
+@bp.route('/uploads')
+@login_required
+def uploads():
+    ups = Upload.query.order_by(Upload.timestamp.desc()).all()
+    return render_template('main/uploads.html', ups=ups)
+
+
+@bp.route('/uploads', methods=['POST'])
+@login_required
+def upload_files():
+    uploaded_file = request.files['file']
+    manage_upload(uploaded_file)
+    return redirect(url_for('main.uploads'))
+
+
+def manage_upload(uploaded_file, comment=None):
+    filename = secure_filename(uploaded_file.filename)
+    if filename != '':
+        name, file_ext = os.path.splitext(filename)
+        file_ext = file_ext.lower()
+        if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+            print("Invalid File extension, valid extensions are "
+                  ".jpg, .png, .gif, .pdf")
+            abort(400)
+        if (file_ext != ".pdf"):
+            if (file_ext != validate_image(uploaded_file.stream)):
+                print("Invalid Image")
+                abort(400)
+        else:
+            try:
+                doc = PdfFileReader(uploaded_file)
+                print(doc.getNumPages())
+            except PyPDF2.utils.PdfReadError:
+                print("Invalid PDF")
+                abort(400)
+        uploaded_file.seek(0)
+        s = uuid.uuid4().hex
+        s += file_ext
+        full_filename = os.path.join(current_app.config['UPLOAD_PATH'], s)
+        uploaded_file.save(full_filename)
+        if comment:
+            comment_id = comment.id
+        else:
+            comment_id = None
+        up_file = Upload(
+            internal_filename=s,
+            external_filename=(uuid.uuid4().hex + file_ext),
+            user_filename=filename,
+            uploader_id=current_user.get_id(),
+            comment_id=comment_id,
+        )
+        db.session.add(up_file)
+        db.session.commit()
+        return up_file
+
+
+@bp.route('/download/<filename>')
+@login_required
+def download(filename):
+    print(Upload.query.filter(Upload.external_filename == filename).first().internal_filename)
+    file = Upload.query.filter(Upload.external_filename == filename).first()
+    filename = file.internal_filename
+    return send_from_directory(current_app.config['UPLOAD_PATH'], filename, as_attachment=True)

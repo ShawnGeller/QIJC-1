@@ -1,0 +1,4 @@
+{{ comment.commenter.firstname }}: {{ comment.text }}
+{% if comment.upload %}
+    Attachment: <a href="{{ url_for('main.download', filename=comment.upload.external_filename) }}">{{ comment.upload.user_filename }}</a>
+{% endif %}

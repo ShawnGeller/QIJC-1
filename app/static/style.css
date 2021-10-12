@@ -76,5 +76,5 @@ tr:hover a{
     font-weight: bold;
 }
 
-:link { color: #0000EE; }
-:visited { color: #551A8B; }
+a:link { color: #0000EE; }
+a:visited { color: #551A8B; }

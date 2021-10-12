@@ -21,6 +21,8 @@
 
   {{ form.abstract.label }}<br>
   {{ form.abstract(size=64, style='height: 200px;') }}<br>
+    {#            Allowed filetypes are jpg, png, gif, pdf#}
+    {#        {{ form.attachment() }}<br>#}
   {{ errors(form.abstract.errors) }}
 
   {{ form.volunteering.label }}
