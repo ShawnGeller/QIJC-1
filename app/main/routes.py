@@ -366,9 +366,9 @@ def message():
         papers = papers_v + papers_
         send_abstracts(e_from, subject, body, papers)
     bodydefault = dedent('''    The abstracts for this week are attached.
-    
+
     Please log in if you want to claim a paper to discuss.
-    
+
     Best, {}.
     '''.format(current_user.firstname))
     form.body.data = bodydefault
@@ -396,9 +396,12 @@ def uploads():
 @login_required
 def upload_files():
     uploaded_file = request.files['file']
-    manage_upload(uploaded_file)
+    store_upload(uploaded_file)
     return redirect(url_for('main.uploads'))
 
+
+def store_upload(uploaded_file):
+    uploaded_file.save(os.path.join(current_app.root_path,'uploads',uploaded_file.filename))
 
 def manage_upload(uploaded_file, comment=None):
     filename = secure_filename(uploaded_file.filename)
@@ -440,6 +443,10 @@ def manage_upload(uploaded_file, comment=None):
         db.session.commit()
         return up_file
 
+@bp.route('/files/<path:path>')
+@login_required
+def send_file(path):
+    return send_from_directory('uploads',path)
 
 @bp.route('/download/<filename>')
 @login_required
