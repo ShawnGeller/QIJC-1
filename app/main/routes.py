@@ -76,23 +76,27 @@ def submit():
         # link_str = form.link.data.split('?')[0].split('.pdf')[0]
         link_str = form.link.data
         m = re.match(".*/([0-9.]+\d).*", link_str)
+        # print(m,flush=True)
         if m is not None:
             id = m.groups()[0]
         else:
             flash("Please correct the link and try again.")
             return redirect(url_for('main.submit'))
         try:
-            q = arxiv.query(id_list=[id])[0]
+            rs = arxiv.Search(id_list=[id])
+            q = next(rs.results())
         except:
             flash('Scraping error, check link or submit manually.')
             return redirect(url_for('main.submit_m'))
-        authors = q['authors']
-        title = q['title']
-        abstract = q['summary']
-        authors = ", ".join(authors)
-        p = Paper(link=q['arxiv_url'], subber=current_user,
+        authors = q.authors
+        title = q.title
+        abstract = q.summary
+        authors = ", ".join([author.name for author in authors])
+        a_url = q.entry_id
+        p_url = q.pdf_url
+        p = Paper(link=a_url, subber=current_user,
                   authors=authors, abstract=abstract,
-                  title=title, pdf_url=q['pdf_url'])
+                  title=title, pdf_url=p_url)
         db.session.add(p)
         db.session.commit()
         # uploaded_file = request.files["attachment"]
@@ -116,14 +120,16 @@ def submit():
         db.session.commit()
         if form.volunteering.data == 'now':
             Paper.query.filter_by(
-                link=link_str).first().volunteer = current_user
+                link=a_url).first().volunteer = current_user
             db.session.commit()
         elif form.volunteering.data == 'later':
             Paper.query.filter_by(
-                link=link_str).first().vol_later = current_user
+                link=a_url).first().vol_later = current_user
             db.session.commit()
         flash('Paper submitted.')
         return redirect(url_for('main.submit'))
+
+
     papers = (Paper.query.filter(Paper.voted == None)
               .order_by(Paper.timestamp.desc()).all())
     editform = FullEditForm(edits=range(len(papers)))
