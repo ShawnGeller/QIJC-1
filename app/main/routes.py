@@ -28,6 +28,7 @@ from app.auth.forms import ChangePasswordForm, ChangeEmailForm, ChangeNameForm
 from app.models import User, Paper, Announcement, Upload, Comment
 from app.email import send_abstracts
 
+import time
 last_month = datetime.today() - timedelta(days=30)
 
 
@@ -429,61 +430,162 @@ def validate_image(stream):
     return '.' + (format if format != 'jpeg' else 'jpg')
 
 
+def get_clean_username():
+    cur_user_name = current_user.username
+    if not cur_user_name.isalnum():
+        flash("username is not alnum")
+        return None
+    else:
+        return cur_user_name
+
+def get_upload_dir():
+    cur_user_name = get_clean_username()
+    if cur_user_name is None:
+        return None
+    else:
+        return os.path.join(current_app.root_path,"uploads", cur_user_name)
+
+
+def clean_pdf_name(fname):
+    m = re.match("(.+)\.pdf", fname)
+    if m is not None:
+        f = m.groups()[0]
+        allowed_chars = "_-"
+        for c in f:
+            if not c.isalnum() and c not in allowed_chars:
+                return None
+
+        return f+".pdf"
+    else:
+        return None
+
+
 @bp.route('/uploads')
 @login_required
 def uploads():
-    ups = Upload.query.order_by(Upload.timestamp.desc()).all()
-    return render_template('main/uploads.html', ups=ups)
+    username = get_clean_username()
+    if username is None:
+        return redirect(url_for('main.index'))
 
+    ups = []
+    updir = get_upload_dir()
+    if updir is None:
+        return redirect(url_for('main.index'))
+
+    if os.path.exists(updir):
+        for item in os.listdir(updir):
+            if os.path.isfile(os.path.join(updir,item)):
+                cname = clean_pdf_name(item)
+                if cname is not None:
+                    l = [cname,time.ctime(os.path.getmtime(os.path.join(updir,cname)))]
+                    ups.append(l)
+
+    ups.sort(reverse=True,key = lambda x: x[1])
+    return render_template('main/uploads.html', ups=ups, username=username)
 
 @bp.route('/uploads', methods=['POST'])
 @login_required
 def upload_files():
-    uploaded_file = request.files['file']
-    manage_upload(uploaded_file)
+    if "filesubmit" in request.form:
+        uploaded_file = request.files['file']
+        if uploaded_file is None:
+            flash("no file")
+            return redirect(url_for('main.uploads'))
+
+        r = store_upload(uploaded_file)
+        if r is None:
+            flash("Upload failed.")
+        else:
+            flash("Upload complete.")
+        return redirect(url_for('main.uploads'))
+
+    if "Delete" in request.form:
+        cname = clean_pdf_name(request.form["Delete"])
+        if cname is None:
+            flash("Delete: bad file.")
+        else:
+            updir = get_upload_dir()
+            if updir is None:
+                return redirect(url_for('main.uploads'))
+
+            fullf = os.path.join(updir,cname)
+            if os.path.exists(fullf):
+                os.remove(fullf)
+                flash("File deleted.")
+            else:
+                flash("Delete: file not found")
+
+            # return redirect(url_for('main.uploads'))
+
     return redirect(url_for('main.uploads'))
 
 
-def manage_upload(uploaded_file, comment=None):
-    filename = secure_filename(uploaded_file.filename)
-    if filename != '':
-        name, file_ext = os.path.splitext(filename)
-        file_ext = file_ext.lower()
-        if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
-            print("Invalid File extension, valid extensions are "
-                  ".jpg, .png, .gif, .pdf")
-            abort(400)
-        if (file_ext != ".pdf"):
-            if (file_ext != validate_image(uploaded_file.stream)):
-                print("Invalid Image")
-                abort(400)
-        else:
-            try:
-                doc = PdfFileReader(uploaded_file)
-                print(doc.getNumPages())
-            except PyPDF2.utils.PdfReadError:
-                print("Invalid PDF")
-                abort(400)
-        uploaded_file.seek(0)
-        s = uuid.uuid4().hex
-        s += file_ext
-        full_filename = os.path.join(current_app.config['UPLOAD_PATH'], s)
-        uploaded_file.save(full_filename)
-        if comment:
-            comment_id = comment.id
-        else:
-            comment_id = None
-        up_file = Upload(
-            internal_filename=s,
-            external_filename=(uuid.uuid4().hex + file_ext),
-            user_filename=filename,
-            uploader_id=current_user.get_id(),
-            comment_id=comment_id,
-        )
-        db.session.add(up_file)
-        db.session.commit()
-        return up_file
 
+
+def store_upload(uploaded_file):
+    cname = clean_pdf_name(uploaded_file.filename)
+    if cname is None:
+        flash("bad filename")
+        return None
+    else:
+        updir = get_upload_dir()
+        os.makedirs(updir,exist_ok=True)
+        cursize = 0
+        for e in os.scandir(updir):
+            if os.path.isfile(e):
+                cursize += os.path.getsize(e)
+        if cursize > 50*1024*1024:
+            flash("Your uploads folder is too big.")
+            return None
+
+        uploaded_file.save(os.path.join(updir,cname))
+        return "success"
+
+
+# def manage_upload(uploaded_file, comment=None):
+#     filename = secure_filename(uploaded_file.filename)
+#     if filename != '':
+#         name, file_ext = os.path.splitext(filename)
+#         file_ext = file_ext.lower()
+#         if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+#             print("Invalid File extension, valid extensions are "
+#                   ".jpg, .png, .gif, .pdf")
+#             abort(400)
+#         if (file_ext != ".pdf"):
+#             if (file_ext != validate_image(uploaded_file.stream)):
+#                 print("Invalid Image")
+#                 abort(400)
+#         else:
+#             try:
+#                 doc = PdfFileReader(uploaded_file)
+#                 print(doc.getNumPages())
+#             except PyPDF2.utils.PdfReadError:
+#                 print("Invalid PDF")
+#                 abort(400)
+#         uploaded_file.seek(0)
+#         s = uuid.uuid4().hex
+#         s += file_ext
+#         full_filename = os.path.join(current_app.config['UPLOAD_PATH'], s)
+#         uploaded_file.save(full_filename)
+#         if comment:
+#             comment_id = comment.id
+#         else:
+#             comment_id = None
+#         up_file = Upload(
+#             internal_filename=s,
+#             external_filename=(uuid.uuid4().hex + file_ext),
+#             user_filename=filename,
+#             uploader_id=current_user.get_id(),
+#             comment_id=comment_id,
+#         )
+#         db.session.add(up_file)
+#         db.session.commit()
+#         return up_file
+
+@bp.route('/files/<path:path>')
+@login_required
+def files(path):
+    return send_from_directory('uploads',path)
 
 @bp.route('/download/<filename>')
 @login_required
