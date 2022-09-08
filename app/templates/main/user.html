@@ -34,6 +34,14 @@ Sum points: {{ user.sumpoints() }}<br>
 
   {{ form2.submit() }}
 </form>
+<h4>Change Name</h4>
+<form action='' method='post'>
+  {{ form3.hidden_tag() }}
+  {{ field_(form3.new_firstname) }}
+  {{ field_(form3.new_lastname) }}
+  {{ form3.submit() }}
+</form>
+
 {% endif %}
 <hr>
 <h3>My recent uploads</h3>
