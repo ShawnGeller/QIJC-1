@@ -90,7 +90,8 @@ def submit():
         title = q['title']
         abstract = q['summary']
         authors = ", ".join(authors)
-        p = Paper(link=q['arxiv_url'], subber=current_user,
+        paper_link = q['arxiv_url']
+        p = Paper(link=paper_link, subber=current_user,
                   authors=authors, abstract=abstract,
                   title=title, pdf_url=q['pdf_url'])
         db.session.add(p)
@@ -116,11 +117,11 @@ def submit():
         db.session.commit()
         if form.volunteering.data == 'now':
             Paper.query.filter_by(
-                link=link_str).first().volunteer = current_user
+                link=paper_link).first().volunteer = current_user
             db.session.commit()
         elif form.volunteering.data == 'later':
             Paper.query.filter_by(
-                link=link_str).first().vol_later = current_user
+                link=paper_link).first().vol_later = current_user
             db.session.commit()
         flash('Paper submitted.')
         return redirect(url_for('main.submit'))
@@ -366,9 +367,9 @@ def message():
         papers = papers_v + papers_
         send_abstracts(e_from, subject, body, papers)
     bodydefault = dedent('''    The abstracts for this week are attached.
-    
+
     Please log in if you want to claim a paper to discuss.
-    
+
     Best, {}.
     '''.format(current_user.firstname))
     form.body.data = bodydefault
