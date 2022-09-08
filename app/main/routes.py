@@ -23,7 +23,7 @@ from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullVoteForm, SearchForm,
                             FullEditForm, CommentForm, MessageForm,
                             AnnouncementForm)
-from app.auth.forms import ChangePasswordForm, ChangeEmailForm
+from app.auth.forms import ChangePasswordForm, ChangeEmailForm, ChangeNameForm
 from app.models import User, Paper, Announcement, Upload, Comment
 from app.email import send_abstracts
 
@@ -246,6 +246,14 @@ def user(username):
         current_user.email = form2.new_email.data
         db.session.commit()
         flash('Email updated.')
+
+    form3 = ChangeNameForm()
+    if form3.validate_on_submit():
+        current_user.firstname = form3.new_firstname.data
+        current_user.lastname = form3.new_lastname.data
+        db.session.commit()
+        flash('Name updated.')
+
     user = User.query.filter_by(username=username).first_or_404()
     subs = (Paper.query.filter_by(subber=user)
             .order_by(Paper.timestamp.desc()))[:10]
@@ -254,7 +262,7 @@ def user(username):
     ups = (Upload.query.filter_by(uploader=user)
             .order_by(Upload.timestamp.desc()))[:10]
     return render_template('main/user.html', user=user, form=form,
-                           subs=subs, showsub=False, form2=form2, ups=ups,
+                           subs=subs, showsub=False, form2=form2, form3=form3,ups=ups,
                            vols=vols, current_user=current_user)
 
 

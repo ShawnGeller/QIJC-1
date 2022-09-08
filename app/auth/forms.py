@@ -75,8 +75,13 @@ class ChangeEmailForm(FlaskForm):
                                  message='Entries do not match.')])
     submit = SubmitField('Submit.')
 
+class ChangeNameForm(FlaskForm):
+    new_firstname = StringField('First name',validators=[DataRequired()])
+    new_lastname = StringField('Last name',validators=[DataRequired()])
+    submit = SubmitField('Submit.')
+
 class ManageUserForm(FlaskForm):
-    action_ = SelectField('Action', 
+    action_ = SelectField('Action',
                           choices=[('ret', 'Retire'),
                                    ('adm', 'Make admin')],
                           validate_choice=False)
