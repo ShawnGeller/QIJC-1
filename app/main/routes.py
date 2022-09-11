@@ -237,18 +237,18 @@ def vote():
 @login_required
 def user(username):
     form = ChangePasswordForm()
-    if form.validate_on_submit():
+    if form.submit_pass.data and form.validate_on_submit():
         current_user.set_password(form.new_pass.data)
         db.session.commit()
         flash('Password changed.')
     form2 = ChangeEmailForm()
-    if form2.validate_on_submit():
+    if form2.submit_email.data and form2.validate_on_submit():
         current_user.email = form2.new_email.data
         db.session.commit()
         flash('Email updated.')
 
     form3 = ChangeNameForm()
-    if form3.validate_on_submit():
+    if form3.submit_name.data and form3.validate_on_submit():
         current_user.firstname = form3.new_firstname.data
         current_user.lastname = form3.new_lastname.data
         db.session.commit()
