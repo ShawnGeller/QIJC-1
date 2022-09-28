@@ -1,6 +1,33 @@
 {% extends 'base.html' %}
 
 {% block app_content %}
+  <!-- <h1>Summary</h1> -->
+  <div class="columns" style="display:grid;grid-template-columns:33% 33% 33%">
+    <div class="column">
+  <h2>Volunteers (now): </h2>
+  <p>
+  {% for nctuple in summary_v %}
+    {{nctuple[0]}}: {{nctuple[1]}}<br>
+  {% endfor %}
+  </p>
+  </div>
+  <div class="column">
+  <h2>Volunteers (later): </h2>
+  <p>
+    {% for nctuple in summary_vl %}
+      {{nctuple[0]}}: {{nctuple[1]}}<br>
+    {% endfor %}
+  </p>
+  </div>
+  <div class="column">
+  <h2>Without volunteers: </h2>
+  <p>
+    {% for nctuple in summary_nv %}
+      {{nctuple[0]}}: {{nctuple[1]}}<br>
+    {% endfor %}
+  </p>
+  </div>
+  </div>
   <h1>Vote</h1>
   <form action='' method='post'>
     {% for j in range(voteforms|length) %}
@@ -38,4 +65,3 @@
         }
     </script>
 {% endblock %}
-
