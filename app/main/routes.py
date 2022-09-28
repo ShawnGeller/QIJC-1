@@ -586,12 +586,12 @@ def store_upload(uploaded_file):
 @bp.route('/files/<path:path>')
 @login_required
 def files(path):
-    return send_from_directory('uploads',path)
+    return send_from_directory(current_app.config['UPLOAD_PATH'],path)
 
-@bp.route('/download/<filename>')
-@login_required
-def download(filename):
-    print(Upload.query.filter(Upload.external_filename == filename).first().internal_filename)
-    file = Upload.query.filter(Upload.external_filename == filename).first()
-    filename = file.internal_filename
-    return send_from_directory(current_app.config['UPLOAD_PATH'], filename, as_attachment=True)
+# @bp.route('/download/<filename>')
+# @login_required
+# def download(filename):
+#     print(Upload.query.filter(Upload.external_filename == filename).first().internal_filename)
+#     file = Upload.query.filter(Upload.external_filename == filename).first()
+#     filename = file.internal_filename
+#     return send_from_directory(current_app.config['UPLOAD_PATH'], filename, as_attachment=True)
