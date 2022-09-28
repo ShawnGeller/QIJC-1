@@ -1,4 +1,5 @@
 import os
+import operator
 import re
 import uuid
 from datetime import datetime, timedelta
@@ -227,9 +228,42 @@ def vote():
         flash('{} votes counted.'.format(votes))
         week = datetime.now().date().strftime('%Y-%m-%d')
         return redirect(url_for('main.history', week=week))
+
+    summary_vdict = {}
+    # summary_vnames = []
+    # summary_vcounts = []
+    for p in papers_v:
+        v = p.volunteer.firstname
+        if v not in summary_vdict:
+            summary_vdict[v] = 0
+        summary_vdict[v] += 1
+    summary_v_sorted = sorted(summary_vdict.items(),key=operator.itemgetter(1),reverse=True)
+
+    summary_nvdict = {}
+    summary_vldict = {}
+    for p in papers_:
+        v = p.subber.firstname
+        if p.vol_later is not None:
+            if v not in summary_vldict:
+                summary_vldict[v] = 0
+            summary_vldict[v] += 1
+        else:
+            if v not in summary_nvdict:
+                summary_nvdict[v] = 0
+            summary_nvdict[v] += 1
+    summary_nv_sorted = sorted(summary_nvdict.items(),key=operator.itemgetter(1),reverse=True)
+    summary_vl_sorted = sorted(summary_vldict.items(),key=operator.itemgetter(1),reverse=True)
+    # summary_vnames = [x[0] for x in summary_v_sorted]
+    # summary_vcounts = [x[1] for x in summary_v_sorted]
+
     return render_template(
         'main/vote.html', title='Vote', showsub=True, voteform=voteform,
-        voteforms=voteforms, extras=True
+        voteforms=voteforms,
+        summary_v=summary_v_sorted,
+        summary_vl = summary_vl_sorted,
+        summary_nv = summary_nv_sorted,
+        # summary_vcounts=summary_vcounts,
+        extras=True
     )
 
 
