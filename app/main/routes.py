@@ -443,7 +443,8 @@ def get_upload_dir():
     if cur_user_name is None:
         return None
     else:
-        return os.path.join(current_app.root_path,"uploads", cur_user_name)
+        p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+        return p
 
 
 def clean_pdf_name(fname):
