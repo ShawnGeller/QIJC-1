@@ -242,12 +242,13 @@ def vote():
     summary_nvdict = {}
     summary_vldict = {}
     for p in papers_:
-        v = p.subber.firstname
         if p.vol_later is not None:
+            v = p.vol_later.firstname
             if v not in summary_vldict:
                 summary_vldict[v] = 0
             summary_vldict[v] += 1
         else:
+            v = p.subber.firstname
             if v not in summary_nvdict:
                 summary_nvdict[v] = 0
             summary_nvdict[v] += 1
