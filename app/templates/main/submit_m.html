@@ -2,7 +2,7 @@
 
 {% block app_content %}
 <h1>Submit Paper Manually</h1>
-<form action='' method='post'>
+<form action='' method='post' enctype="multipart/form-data">
   {{ form.hidden_tag() }}
 
   {% macro errors(source) -%}
@@ -20,19 +20,27 @@
   {% endfor %}
 
   {{ form.abstract.label }}<br>
-  {{ form.abstract(size=64, style='height: 200px;') }}<br>
-    {#            Allowed filetypes are jpg, png, gif, pdf#}
-    {#        {{ form.attachment() }}<br>#}
+  {{ form.abstract(size=64, style='height: 200px; width: 400px;') }}<br>
+                Allowed filetypes are jpg, png, gif, pdf
+            {{ form.attachment() }}<br>
   {{ errors(form.abstract.errors) }}
+    {% for subfield in form.volunteering %}
+        <tr>
+            <td>{{ subfield }}</td>
+            <td>{{ subfield.label }}</td>
+        </tr><br>
+    {% endfor %}
 
-  {{ form.volunteering.label }}
-  {{ form.volunteering }}<br>
-  <br>
+{#  {{ form.volunteering.label }}#}
+{#  {{ form.volunteering }}#}
+{#    <br>#}
+{#  <br>#}
   {{ form.submit() }}
 </form>
-<br><hr><br>
-{% for paper in papers %}
-{% include 'main/_paper.html' %}
-{% endfor %}
+    <br>
+{#<br><hr><br>#}
+{#{% for paper in papers %}#}
+{#{% include 'main/_paper.html' %}#}
+{#{% endfor %}#}
 
 {% endblock %}
