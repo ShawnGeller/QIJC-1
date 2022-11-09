@@ -1,4 +1,5 @@
 import os
+import operator
 import re
 import uuid
 from datetime import datetime, timedelta
@@ -23,10 +24,11 @@ from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullVoteForm, SearchForm,
                             FullEditForm, CommentForm, MessageForm,
                             AnnouncementForm)
-from app.auth.forms import ChangePasswordForm, ChangeEmailForm
+from app.auth.forms import ChangePasswordForm, ChangeEmailForm, ChangeNameForm
 from app.models import User, Paper, Announcement, Upload, Comment
 from app.email import send_abstracts
 
+import time
 last_month = datetime.today() - timedelta(days=30)
 
 
@@ -88,13 +90,12 @@ def submit():
         except:
             flash('Scraping error, check link or submit manually.')
             return redirect(url_for('main.submit_m'))
-        authors = q.authors
-        title = q.title
-        abstract = q.summary
-        authors = ", ".join([author.name for author in authors])
-        a_url = q.entry_id
-        p_url = q.pdf_url
-        p = Paper(link=a_url, subber=current_user,
+        authors = q['authors']
+        title = q['title']
+        abstract = q['summary']
+        authors = ", ".join(authors)
+        paper_link = q['arxiv_url']
+        p = Paper(link=paper_link, subber=current_user,
                   authors=authors, abstract=abstract,
                   title=title, pdf_url=p_url)
         db.session.add(p)
@@ -120,11 +121,11 @@ def submit():
         db.session.commit()
         if form.volunteering.data == 'now':
             Paper.query.filter_by(
-                link=a_url).first().volunteer = current_user
+                link=paper_link).first().volunteer = current_user
             db.session.commit()
         elif form.volunteering.data == 'later':
             Paper.query.filter_by(
-                link=a_url).first().vol_later = current_user
+                link=paper_link).first().vol_later = current_user
             db.session.commit()
         flash('Paper submitted.')
         return redirect(url_for('main.submit'))
@@ -241,9 +242,43 @@ def vote():
         flash('{} votes counted.'.format(votes))
         week = datetime.now().date().strftime('%Y-%m-%d')
         return redirect(url_for('main.history', week=week))
+
+    summary_vdict = {}
+    # summary_vnames = []
+    # summary_vcounts = []
+    for p in papers_v:
+        v = p.volunteer.firstname
+        if v not in summary_vdict:
+            summary_vdict[v] = 0
+        summary_vdict[v] += 1
+    summary_v_sorted = sorted(summary_vdict.items(),key=operator.itemgetter(1),reverse=True)
+
+    summary_nvdict = {}
+    summary_vldict = {}
+    for p in papers_:
+        if p.vol_later is not None:
+            v = p.vol_later.firstname
+            if v not in summary_vldict:
+                summary_vldict[v] = 0
+            summary_vldict[v] += 1
+        else:
+            v = p.subber.firstname
+            if v not in summary_nvdict:
+                summary_nvdict[v] = 0
+            summary_nvdict[v] += 1
+    summary_nv_sorted = sorted(summary_nvdict.items(),key=operator.itemgetter(1),reverse=True)
+    summary_vl_sorted = sorted(summary_vldict.items(),key=operator.itemgetter(1),reverse=True)
+    # summary_vnames = [x[0] for x in summary_v_sorted]
+    # summary_vcounts = [x[1] for x in summary_v_sorted]
+
     return render_template(
         'main/vote.html', title='Vote', showsub=True, voteform=voteform,
-        voteforms=voteforms, extras=True
+        voteforms=voteforms,
+        summary_v=summary_v_sorted,
+        summary_vl = summary_vl_sorted,
+        summary_nv = summary_nv_sorted,
+        # summary_vcounts=summary_vcounts,
+        extras=True
     )
 
 
@@ -251,15 +286,23 @@ def vote():
 @login_required
 def user(username):
     form = ChangePasswordForm()
-    if form.validate_on_submit():
+    if form.submit_pass.data and form.validate_on_submit():
         current_user.set_password(form.new_pass.data)
         db.session.commit()
         flash('Password changed.')
     form2 = ChangeEmailForm()
-    if form2.validate_on_submit():
+    if form2.submit_email.data and form2.validate_on_submit():
         current_user.email = form2.new_email.data
         db.session.commit()
         flash('Email updated.')
+
+    form3 = ChangeNameForm()
+    if form3.submit_name.data and form3.validate_on_submit():
+        current_user.firstname = form3.new_firstname.data
+        current_user.lastname = form3.new_lastname.data
+        db.session.commit()
+        flash('Name updated.')
+
     user = User.query.filter_by(username=username).first_or_404()
     subs = (Paper.query.filter_by(subber=user)
             .order_by(Paper.timestamp.desc()))[:10]
@@ -268,7 +311,7 @@ def user(username):
     ups = (Upload.query.filter_by(uploader=user)
             .order_by(Upload.timestamp.desc()))[:10]
     return render_template('main/user.html', user=user, form=form,
-                           subs=subs, showsub=False, form2=form2, ups=ups,
+                           subs=subs, showsub=False, form2=form2, form3=form3,ups=ups,
                            vols=vols, current_user=current_user)
 
 
@@ -400,66 +443,168 @@ def validate_image(stream):
     return '.' + (format if format != 'jpeg' else 'jpg')
 
 
+def get_clean_username():
+    cur_user_name = current_user.username
+    if not cur_user_name.isalnum():
+        flash("username is not alnum")
+        return None
+    else:
+        return cur_user_name
+
+def get_upload_dir():
+    cur_user_name = get_clean_username()
+    if cur_user_name is None:
+        return None
+    else:
+        p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+        return p
+
+
+def clean_pdf_name(fname):
+    m = re.match("(.+)\.pdf", fname)
+    if m is not None:
+        f = m.groups()[0]
+        allowed_chars = "_-"
+        for c in f:
+            if not c.isalnum() and c not in allowed_chars:
+                return None
+
+        return f+".pdf"
+    else:
+        return None
+
+
 @bp.route('/uploads')
 @login_required
 def uploads():
-    ups = Upload.query.order_by(Upload.timestamp.desc()).all()
-    return render_template('main/uploads.html', ups=ups)
+    username = get_clean_username()
+    if username is None:
+        return redirect(url_for('main.index'))
 
+    ups = []
+    updir = get_upload_dir()
+    if updir is None:
+        return redirect(url_for('main.index'))
+
+    if os.path.exists(updir):
+        for item in os.listdir(updir):
+            if os.path.isfile(os.path.join(updir,item)):
+                cname = clean_pdf_name(item)
+                if cname is not None:
+                    l = [cname,time.ctime(os.path.getmtime(os.path.join(updir,cname)))]
+                    ups.append(l)
+
+    ups.sort(reverse=True,key = lambda x: x[1])
+    return render_template('main/uploads.html', ups=ups, username=username)
 
 @bp.route('/uploads', methods=['POST'])
 @login_required
 def upload_files():
-    uploaded_file = request.files['file']
-    manage_upload(uploaded_file)
+    if "filesubmit" in request.form:
+        uploaded_file = request.files['file']
+        if uploaded_file is None:
+            flash("no file")
+            return redirect(url_for('main.uploads'))
+
+        r = store_upload(uploaded_file)
+        if r is None:
+            flash("Upload failed.")
+        else:
+            flash("Upload complete.")
+        return redirect(url_for('main.uploads'))
+
+    if "Delete" in request.form:
+        cname = clean_pdf_name(request.form["Delete"])
+        if cname is None:
+            flash("Delete: bad file.")
+        else:
+            updir = get_upload_dir()
+            if updir is None:
+                return redirect(url_for('main.uploads'))
+
+            fullf = os.path.join(updir,cname)
+            if os.path.exists(fullf):
+                os.remove(fullf)
+                flash("File deleted.")
+            else:
+                flash("Delete: file not found")
+
+            # return redirect(url_for('main.uploads'))
+
     return redirect(url_for('main.uploads'))
 
 
-def manage_upload(uploaded_file, comment=None):
-    filename = secure_filename(uploaded_file.filename)
-    if filename != '':
-        name, file_ext = os.path.splitext(filename)
-        file_ext = file_ext.lower()
-        if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
-            print("Invalid File extension, valid extensions are "
-                  ".jpg, .png, .gif, .pdf")
-            abort(400)
-        if (file_ext != ".pdf"):
-            if (file_ext != validate_image(uploaded_file.stream)):
-                print("Invalid Image")
-                abort(400)
-        else:
-            try:
-                doc = PdfFileReader(uploaded_file)
-                print(doc.getNumPages())
-            except PyPDF2.utils.PdfReadError:
-                print("Invalid PDF")
-                abort(400)
-        uploaded_file.seek(0)
-        s = uuid.uuid4().hex
-        s += file_ext
-        full_filename = os.path.join(current_app.config['UPLOAD_PATH'], s)
-        uploaded_file.save(full_filename)
-        if comment:
-            comment_id = comment.id
-        else:
-            comment_id = None
-        up_file = Upload(
-            internal_filename=s,
-            external_filename=(uuid.uuid4().hex + file_ext),
-            user_filename=filename,
-            uploader_id=current_user.get_id(),
-            comment_id=comment_id,
-        )
-        db.session.add(up_file)
-        db.session.commit()
-        return up_file
 
 
-@bp.route('/download/<filename>')
+def store_upload(uploaded_file):
+    cname = clean_pdf_name(uploaded_file.filename)
+    if cname is None:
+        flash("bad filename")
+        return None
+    else:
+        updir = get_upload_dir()
+        os.makedirs(updir,exist_ok=True)
+        cursize = 0
+        for e in os.scandir(updir):
+            if os.path.isfile(e):
+                cursize += os.path.getsize(e)
+        if cursize > 50*1024*1024:
+            flash("Your uploads folder is too big.")
+            return None
+
+        uploaded_file.save(os.path.join(updir,cname))
+        return "success"
+
+
+# def manage_upload(uploaded_file, comment=None):
+#     filename = secure_filename(uploaded_file.filename)
+#     if filename != '':
+#         name, file_ext = os.path.splitext(filename)
+#         file_ext = file_ext.lower()
+#         if file_ext not in current_app.config['UPLOAD_EXTENSIONS']:
+#             print("Invalid File extension, valid extensions are "
+#                   ".jpg, .png, .gif, .pdf")
+#             abort(400)
+#         if (file_ext != ".pdf"):
+#             if (file_ext != validate_image(uploaded_file.stream)):
+#                 print("Invalid Image")
+#                 abort(400)
+#         else:
+#             try:
+#                 doc = PdfFileReader(uploaded_file)
+#                 print(doc.getNumPages())
+#             except PyPDF2.utils.PdfReadError:
+#                 print("Invalid PDF")
+#                 abort(400)
+#         uploaded_file.seek(0)
+#         s = uuid.uuid4().hex
+#         s += file_ext
+#         full_filename = os.path.join(current_app.config['UPLOAD_PATH'], s)
+#         uploaded_file.save(full_filename)
+#         if comment:
+#             comment_id = comment.id
+#         else:
+#             comment_id = None
+#         up_file = Upload(
+#             internal_filename=s,
+#             external_filename=(uuid.uuid4().hex + file_ext),
+#             user_filename=filename,
+#             uploader_id=current_user.get_id(),
+#             comment_id=comment_id,
+#         )
+#         db.session.add(up_file)
+#         db.session.commit()
+#         return up_file
+
+@bp.route('/files/<path:path>')
 @login_required
-def download(filename):
-    print(Upload.query.filter(Upload.external_filename == filename).first().internal_filename)
-    file = Upload.query.filter(Upload.external_filename == filename).first()
-    filename = file.internal_filename
-    return send_from_directory(current_app.config['UPLOAD_PATH'], filename, as_attachment=True)
+def files(path):
+    return send_from_directory(current_app.config['UPLOAD_PATH'],path)
+
+# @bp.route('/download/<filename>')
+# @login_required
+# def download(filename):
+#     print(Upload.query.filter(Upload.external_filename == filename).first().internal_filename)
+#     file = Upload.query.filter(Upload.external_filename == filename).first()
+#     filename = file.internal_filename
+#     return send_from_directory(current_app.config['UPLOAD_PATH'], filename, as_attachment=True)

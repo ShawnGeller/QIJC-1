@@ -60,7 +60,7 @@ class ChangePasswordForm(FlaskForm):
                               validators=[DataRequired(),
                               EqualTo('new_pass',
                                       message='Entries do not match.')])
-    submit = SubmitField('Submit.')
+    submit_pass = SubmitField('Submit.')
 
     def validate_current_pass(self, current_pass):
         if not current_user.check_password(current_pass.data):
@@ -73,10 +73,15 @@ class ChangeEmailForm(FlaskForm):
                              validators=[EqualTo(
                                  'new_email',
                                  message='Entries do not match.')])
-    submit = SubmitField('Submit.')
+    submit_email = SubmitField('Submit.')
+
+class ChangeNameForm(FlaskForm):
+    new_firstname = StringField('First name',validators=[DataRequired()])
+    new_lastname = StringField('Last name',validators=[DataRequired()])
+    submit_name = SubmitField('Submit.')
 
 class ManageUserForm(FlaskForm):
-    action_ = SelectField('Action', 
+    action_ = SelectField('Action',
                           choices=[('ret', 'Retire'),
                                    ('adm', 'Make admin')],
                           validate_choice=False)

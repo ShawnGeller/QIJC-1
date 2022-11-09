@@ -23,7 +23,7 @@ Sum points: {{ user.sumpoints() }}<br>
   {{ field_(form.new_pass) }}
   {{ field_(form.new_pass2) }}
 
-  {{ form.submit() }}
+  {{ form.submit_pass() }}
 </form>
 <h4>Change Email</h4>
 <form action='' method='post'>
@@ -32,8 +32,16 @@ Sum points: {{ user.sumpoints() }}<br>
   {{ field_(form2.new_email) }}
   {{ field_(form2.new_email2) }}
 
-  {{ form2.submit() }}
+  {{ form2.submit_email() }}
 </form>
+<h4>Change Name</h4>
+<form action='' method='post'>
+  {{ form3.hidden_tag() }}
+  {{ field_(form3.new_firstname) }}
+  {{ field_(form3.new_lastname) }}
+  {{ form3.submit_name() }}
+</form>
+
 {% endif %}
 <hr>
 <h3>My recent uploads</h3>
