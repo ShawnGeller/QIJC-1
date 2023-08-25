@@ -405,7 +405,7 @@ def message():
     form = MessageForm()
     if form.validate_on_submit():
         subject = form.subject.data
-        e_from = '[' + form.e_from.data + ']'
+        e_from = form.e_from.data
         body = form.body.data
         attach = form.abstracts.data
         papers_v = (Paper.query.filter(Paper.voted == None)
@@ -414,6 +414,7 @@ def message():
         papers_ = (Paper.query.filter(Paper.voted == None)
                    .order_by(Paper.timestamp.desc()).all())
         papers = papers_v + papers_
+        # print("from: ", e_from,flush=True)
         send_abstracts(e_from, subject, body, papers)
     bodydefault = dedent('''    The abstracts for this week are attached.
 
