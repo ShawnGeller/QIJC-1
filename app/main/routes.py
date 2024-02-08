@@ -96,6 +96,10 @@ def submit():
         authors = ", ".join([author.name for author in authors])
         a_url = q.entry_id
         p_url = q.pdf_url
+        matching_papers = Paper.query.filter(Paper.voted == None).where(Paper.title == title)
+        if len(matching_papers):
+            flash("Paper was already submitted.")
+            return redirect(url_for('main.submit'))
         p = Paper(link=a_url, subber=current_user,
                   authors=authors, abstract=abstract,
                   title=title, pdf_url=p_url)
