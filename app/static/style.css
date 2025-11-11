@@ -1,28 +1,83 @@
+:root{
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --accent:#1f4b99;
+    --muted:#6b7280;
+    --teal:#0b7285;
+    --gold:#b7791f;
+    --purple:#6d28d9;
+    --slate:#334155;
+}
 body {
-    background-color: lightblue;
-    font-family: arial;
+        background-color: var(--bg);
+        font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        color: #111827;
+        margin: 0;
 }
 
 .title {
-    font-weight: bold;
+    font-weight: 600;
+    color: var(--purple);
 }
 
 hr {
-    border: 5px solid midnightblue;
-    border-radius: 5px;
+    border: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(0,0,0,0.08), transparent);
+    margin: 1rem 0;
 }
 
-input {
-    border-radius: 5px;
-    border: 2px solid midnightblue;
-    background-color: lightgrey;
+input, textarea, select {
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        background-color: #fff;
+        padding: 8px 10px;
+        box-shadow: none;
 }
 
 button {
-  border-radius: 5px;
-  border: 2px solid midnightblue;
-  background-color: lightgrey;
+    border-radius: 8px;
+    border: none;
+    background-color: var(--accent);
+    color: white;
+    padding: 8px 12px;
+    cursor: pointer;
 }
+button, .vote-button, .delete-comment-btn {
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+button:focus, .vote-button:focus, .delete-comment-btn:focus {
+    outline: 3px solid rgba(31,75,153,0.15);
+    outline-offset: 2px;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(31,75,153,0.12);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* vote button subtle hover */
+.vote-button:hover { background-color: #f3f4f6; }
+
+/* delete button distinct danger style */
+.delete-comment-btn {
+    background: transparent;
+    color: #b91c1c;
+    border: 1px solid rgba(185,28,28,0.12);
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+.delete-comment-btn:hover {
+    background: rgba(185,28,28,0.06);
+    color: #991b1b;
+    transform: translateY(-1px);
+}
+.delete-comment-btn:active { transform: translateY(0); }
 
 select {
     border-radius: 5px;
@@ -42,45 +97,111 @@ table, th, td{
 }
 
 tr:hover{
-    background-color: white;
-    color: black;
-}
-tr:hover a{
-    color: black;
+    background-color: rgba(0,0,0,0.03);
 }
 
-.table-hover {
-    border: 2px solid black;
-    border-radius: 20px;
-    padding: 10px;
-    margin: 5px;
-    background-color: white;
-    color: black;
+.card {
+    background: var(--card);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(16,24,40,0.06);
+    padding: 14px;
+    margin: 10px 0;
 }
 
-.table-hover a {
-    color: black;
+.paper-row { display:flex; gap:16px; align-items:flex-start; border-radius:8px; padding:12px; background:var(--card); box-shadow:0 1px 2px rgba(16,24,40,0.04); }
+.paper-row + .paper-row { margin-top:10px; }
+.paper-meta { color:var(--muted); font-size:0.95rem; }
+.paper-body { flex:1; }
+.paper-title { font-size:1.05rem; font-weight:600; color:var(--slate); margin-bottom:6px; }
+.paper-authors { color:var(--muted); margin-bottom:6px; }
+.paper-abstract { margin-top:8px; color:#374151; }
+.paper-links a { color:var(--teal); word-break:break-all; }
+
+/* grid of papers for submit page */
+.papers-grid { display:grid; grid-template-columns: 1fr; gap:12px; align-items:start; }
+/* Make each paper-wrap a vertical flex container that stretches to equal height */
+.paper-wrap { display:flex; flex-direction:column; height:100%; align-items:stretch; }
+/* The visible card area should grow to fill available space so action-bar sits at bottom */
+.paper-wrap .paper-item { flex: 1 1 auto; display:flex; flex-direction:column; min-height: 220px; }
+/* Ensure content inside the card flows vertically and can push the actions down */
+.paper-wrap .paper-item > * { /* keep children layout natural */ }
+/* action-bar should stay visually attached to the bottom of the wrap */
+.action-bar { margin-top:8px; display:flex; align-items:center; justify-content:flex-start; align-self:stretch; gap:8px; flex-wrap:wrap; }
+.action-row { display:flex; gap:8px; align-items:center; justify-content:flex-start; }
+
+/* keep buttons grouped to the left; allow other elements to be pushed right by adding a utility class in templates if needed */
+.action-bar > button, .action-bar .btn, .action-bar input[type=submit], .action-bar .vote-button {
+    margin-right: 8px;
+}
+
+/* Ensure inside the card any .votes or spanners push to bottom if needed */
+.paper-item .votes { margin-top: auto; }
+
+/* ensure vote action aligns visually */
+.paper-item .votes { margin-top:auto; }
+
+.card small {
+    color: var(--muted);
 }
 
 .vote {
-    padding: 5px;
+    padding: 6px 0;
 }
 
 .vote-button {
-    border-radius: 5px;
-    border: 2px solid midnightblue;
-    background-color: lightgrey;
-    padding: 5px;
-    color: black;
+    background: #f9fafb; /* very light */
+    color: #0f172a; /* dark text */
+    border: 1px solid #e5e7eb;
+    padding: 6px 10px;
+    border-radius: 8px;
 }
+.vote-button:hover { background: #eef2ff; }
+.vote-button:active { transform: translateY(0); }
 
 .vote input {
     color: black;
 }
 
 .votes {
-    font-weight: bold;
+    font-weight: 600;
 }
 
-a:link { color: #0000EE; }
-a:visited { color: #551A8B; }
+a { color: var(--accent); }
+
+/* navbar tweak - give subtle color band */
+.navbar {
+    background: linear-gradient(90deg, rgba(31,75,153,0.05), rgba(109,40,217,0.03));
+    border-bottom: 1px solid rgba(17,24,39,0.04);
+}
+
+/* card header / metadata chips */
+.card .header {
+    display:flex; align-items:center; gap:10px; margin-bottom:8px;
+}
+.chip {
+    display:inline-block; padding:4px 8px; border-radius:999px; font-size:0.85rem;
+    background: linear-gradient(180deg, rgba(15,23,42,0.03), rgba(15,23,42,0.01));
+    color: var(--slate); border:1px solid rgba(15,23,42,0.06);
+}
+.chip.accent { background: rgba(31,75,153,0.08); color: var(--teal); border-color: rgba(11,114,133,0.12); }
+.chip.gold { background: rgba(183,121,31,0.06); color: var(--gold); border-color: rgba(183,121,31,0.12); }
+.chip.purple { background: rgba(109,40,217,0.06); color: var(--purple); border-color: rgba(109,40,217,0.12); }
+
+/* responsive container tweaks */
+.container { max-width: 980px; margin: 0 auto; padding: 18px; }
+
+/* history grouping styles */
+.history-year { padding:16px; margin-bottom:14px; }
+.history-year h3 { margin:0 0 8px 0; color:var(--slate); }
+.history-months { display:flex; gap:12px; flex-wrap:wrap; }
+.history-month { background: linear-gradient(180deg, rgba(243,244,246,0.6), rgba(255,255,255,0.6)); padding:10px; border-radius:8px; min-width:180px; }
+.history-month h4 { margin:0 0 6px 0; font-size:0.95rem; }
+.history-weeks { display:flex; gap:6px; flex-wrap:wrap; }
+
+/* small filter input */
+.list-filter { margin-bottom: 12px; display:flex; gap:8px; align-items:center; }
+.list-filter input { flex:1; }
+
+@media (max-width:600px){
+    .container { padding: 12px; }
+}

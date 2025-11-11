@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+  <h2>Edit comment</h2>
+  <form method="post">
+    {{ form.hidden_tag() }}
+    {{ form.comment.label }}<br>
+    {{ form.comment(rows=6, cols=60) }}<br>
+    {{ form.submit() }}
+  </form>
+{% endblock %}

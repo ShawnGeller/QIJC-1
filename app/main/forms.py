@@ -1,5 +1,8 @@
 from flask import flash
 from flask_wtf import FlaskForm
+
+class DeleteCommentForm(FlaskForm):
+    pass
 from flask_login import current_user
 from wtforms import (StringField, PasswordField, BooleanField,
                      SubmitField, IntegerField, FieldList, FormField,
@@ -107,6 +110,11 @@ class CommentForm(FlaskForm):
     comment = TextAreaField('Comment', validators=[DataRequired()])
     file = FileField()
     submit = SubmitField('Submit.')
+
+
+class EditCommentForm(FlaskForm):
+    comment = TextAreaField('Comment', validators=[DataRequired()])
+    submit = SubmitField('Save')
 
 class AnnouncementForm(FlaskForm):
     announcement = TextAreaField('Announcement', validators=[DataRequired()])

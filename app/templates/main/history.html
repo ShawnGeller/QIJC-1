@@ -3,14 +3,70 @@
 {% block app_content %}
 <h1>History</h1>
 {% if papers %}
-Votes from {{ papers[0].voted }}<hr>
+<div class="card header">
+	<div>
+		<strong>Votes from {{ papers[0].voted }}</strong>
+	</div>
+	<div style="margin-left:auto">
+		<div class="list-filter">
+			<label for="history-filter">Filter:</label>
+			<input id="history-filter" type="search" placeholder="filter by title, submitter, or author" />
+			<button type="button" id="history-clear">Clear</button>
+		</div>
+	</div>
+</div>
+<hr>
 {% for paper in papers %}
-{% include 'main/_paper.html' %}
+	<div class="card paper-item">
+		{% include 'main/_paper.html' %}
+	</div>
 {% endfor %}
 {% else %}
-{% for week in weeks %}
-<a href='{{ url_for('main.history', week=week) }}'>{{ week }}</a><br>
-{% endfor %}
+{% if grouped_weeks %}
+	{% for year, months in grouped_weeks %}
+		<div class="history-year card">
+			<h3>{{ year }}</h3>
+			<div class="history-months">
+				{% for month, weeks in months %}
+					<div class="history-month">
+						<h4>{{ month }}</h4>
+						<div class="history-weeks">
+							{% for w in weeks %}
+								<a class="chip" href='{{ url_for('main.history', week=w) }}'>{{ w }}</a>
+							{% endfor %}
+						</div>
+					</div>
+				{% endfor %}
+			</div>
+		</div>
+	{% endfor %}
+{% else %}
+	<div class="card">
+		<div class="header">
+			<p>No history available.</p>
+		</div>
+	</div>
+{% endif %}
 {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+;(function(){
+	const input = document.getElementById('history-filter');
+	const clear = document.getElementById('history-clear');
+	if(!input) return;
+	function filter(){
+		const q = input.value.toLowerCase().trim();
+		document.querySelectorAll('.paper-item').forEach(function(el){
+			const text = el.innerText.toLowerCase();
+			el.style.display = q === '' || text.indexOf(q) !== -1 ? '' : 'none';
+		});
+	}
+	input.addEventListener('input', filter);
+	clear.addEventListener('click', function(){ input.value=''; filter(); input.focus(); });
+})();
+</script>
 {% endblock %}

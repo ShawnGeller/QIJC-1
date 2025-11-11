@@ -30,25 +30,39 @@
   </div>
   <h1>Vote</h1>
   <form action='' method='post'>
+    <div class="papers-grid">
     {% for j in range(voteforms|length) %}
       {% set i = voteforms[j] %}
       {% set paper = i[0] %}
-      <div id='{{ paper.id }}'></div>
-      {% include 'main/_paper.html' %}
-      {{ i[1].hidden_tag() }}
-      <div class='vote' id="vote-form-{{ j }}">
-	Vote: {{ i[1].vote_num(size=1, class_="vote-num") }} / {{ i[1].vote_den(size=1, class_="vote-den") }}
-          <button class="vote-button" type="button"
-                  onclick="this.readOnly=true;
-                  for (let node of this.parentNode.childNodes){
-                      node.readOnly=true;
-                  }
-                  this.style.display = 'none';" >Vote</button>
-</div></div>
-{% endfor %}
+      <div class="paper-wrap">
+        <div class="card paper-item">
+          <div id='{{ paper.id }}'></div>
+          {% include 'main/_paper.html' %}
+        </div>
+        <div class='vote action-bar' id="vote-form-{{ j }}">
+          {{ i[1].hidden_tag() }}
+          <div class="action-row">
+            Vote: {{ i[1].vote_num(size=1, class_="vote-num") }} / {{ i[1].vote_den(size=1, class_="vote-den") }}
+            <button class="vote-button" type="button" onclick="this.closest('form').submit();">Vote</button>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+    </div>
 <br>
 {{ voteform.submit() }}
 </form>
+
+<script>
+// Delegate vote button clicks to submit the closest enclosing form.
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest && e.target.closest('.vote-button');
+  if (!btn) return;
+  // find the form that contains the hidden fields for this vote
+  const fm = btn.closest('form');
+  if (fm) fm.submit();
+});
+</script>
 {% endblock %}
 
 {% block scripts %}

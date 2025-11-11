@@ -9,27 +9,110 @@ import time
 import arxiv
 import PyPDF2
 from PyPDF2 import PdfFileReader
-import imghdr
+from PIL import Image
 
 from flask import (Flask, render_template, request,
-                   flash, redirect, url_for, session, abort, Markup,
+                   flash, redirect, url_for, session, abort,
                    send_from_directory, current_app)
+from markupsafe import Markup
 from flask_login import (current_user, login_user, logout_user, login_required)
 from sqlalchemy import cast, Float
 from werkzeug.utils import secure_filename
-from werkzeug.urls import url_parse
-
+from urllib.parse import urlparse, urljoin
 from app import db
 from app.main import bp
 from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullVoteForm, SearchForm,
                             FullEditForm, CommentForm, MessageForm,
-                            AnnouncementForm)
+                            AnnouncementForm, DeleteCommentForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm, ChangeNameForm
 from app.models import User, Paper, Announcement, Upload, Comment
 from app.email import send_abstracts
 
 last_month = datetime.today() - timedelta(days=30)
+
+# ...existing code...
+
+@bp.route('/delete_comment/<int:comment_id>', methods=['POST'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    # debug ownership
+    try:
+        uid = int(current_user.get_id())
+    except Exception:
+        uid = current_user.get_id()
+    print(f"Ownership: current_user_id={uid}, comment_owner={comment.commenter_id}")
+    if comment.commenter_id != uid:
+        print("Ownership mismatch, aborting delete.")
+        abort(403)
+    # Delete associated upload if exists
+    print(f"Attempting to delete comment {comment.id} by user {current_user.id}")
+    if comment.upload:
+        # Always query Upload from session to ensure it's attached
+        upload = Upload.query.filter_by(comment_id=comment.id).first()
+        if upload:
+            print(f"Found upload: {upload.internal_filename}")
+            upload_path = current_app.config["UPLOAD_PATH"]
+            file_path = os.path.join(upload_path, upload.internal_filename)
+            print(f"Upload path: {file_path}")
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    print("File deleted from disk.")
+                else:
+                    print("File not found on disk.")
+            except Exception as e:
+                print(f"Error deleting file: {e}")
+            db.session.delete(upload)
+            print("Upload deleted from DB.")
+        else:
+            print("No upload found for this comment in DB.")
+    else:
+        print("No upload found for this comment.")
+    db.session.delete(comment)
+    db.session.commit()
+    print("Comment deleted from DB.")
+    flash('Comment deleted.')
+    return redirect(request.referrer or url_for('main.index'))
+import os
+import re
+import uuid
+from datetime import datetime, timedelta
+from textwrap import dedent
+
+import operator
+import time
+import arxiv
+import PyPDF2
+from PyPDF2 import PdfFileReader
+from PIL import Image
+
+from flask import (Flask, render_template, request,
+                   flash, redirect, url_for, session, abort,
+                   send_from_directory, current_app)
+from markupsafe import Markup
+from flask_login import (current_user, login_user, logout_user, login_required)
+from sqlalchemy import cast, Float
+from werkzeug.utils import secure_filename
+from urllib.parse import urlparse, urljoin
+from app import db
+from app.main import bp
+from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
+                            FullVoteForm, SearchForm,
+                            FullEditForm, CommentForm, MessageForm,
+                            AnnouncementForm, EditCommentForm, DeleteCommentForm)
+from app.auth.forms import ChangePasswordForm, ChangeEmailForm, ChangeNameForm
+from app.models import User, Paper, Announcement, Upload, Comment
+from app.email import send_abstracts
+
+last_month = datetime.today() - timedelta(days=30)
+
+
+@bp.context_processor
+def inject_delete_form():
+    # always provide a delete form instance to templates that render comments
+    return dict(delete_form=DeleteCommentForm())
 
 
 
@@ -159,10 +242,12 @@ def submit():
             continue
         db.session.commit()
         return redirect(url_for('main.submit'))
+    delete_form = DeleteCommentForm()
     return render_template('main/submit.html', form=form,
                            title='Submit Paper', showsub=True,
                            editform=editform,
-                           editforms=editforms, extras=True)
+                           editforms=editforms, extras=True,
+                           delete_form=delete_form)
 
 
 @bp.route('/submit_m', methods=['GET', 'POST'])
@@ -327,8 +412,22 @@ def history():
     weeks = [paper.voted for paper
              in Paper.query.group_by(Paper.voted).all()
              if paper.voted != None]
-    weeks.reverse()
-    return render_template('main/history.html', weeks=weeks)
+    weeks = sorted(set(weeks), reverse=True)
+    # group weeks by year -> month
+    from collections import defaultdict
+    grouped = defaultdict(lambda: defaultdict(list))
+    for w in weeks:
+        y = w.year
+        m = w.strftime('%B')
+        grouped[y][m].append(w)
+    # convert to ordered structure
+    grouped_weeks = []
+    for y in sorted(grouped.keys(), reverse=True):
+        months = []
+        for m in sorted(grouped[y].keys(), key=lambda x: datetime.strptime(x, '%B').month, reverse=True):
+            months.append((m, grouped[y][m]))
+        grouped_weeks.append((y, months))
+    return render_template('main/history.html', grouped_weeks=grouped_weeks)
 
 
 @bp.route('/search', methods=['GET', 'POST'])
@@ -384,19 +483,48 @@ def comment_on():
     paper = Paper.query.get(request.args.get('id'))
     form = CommentForm()
     if form.validate_on_submit():
-        # uploaded_file = request.files["file"]
-        # up = manage_upload(uploaded_file)
+        uploaded_file = request.files.get("file")
         comment = Comment(
             text=form.comment.data,
             commenter_id=current_user.id,
             paper_id=paper.id,
-            # upload=up,
         )
         db.session.add(comment)
+        db.session.flush()  # Get comment.id before commit
+        if uploaded_file and uploaded_file.filename:
+            filename = secure_filename(uploaded_file.filename)
+            unique_name = str(uuid.uuid4()) + "_" + filename
+            upload_dir = current_app.config.get("UPLOAD_PATH", os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
+            os.makedirs(upload_dir, exist_ok=True)
+            file_path = os.path.join(upload_dir, unique_name)
+            uploaded_file.save(file_path)
+            up = Upload(
+                internal_filename=unique_name,
+                external_filename=filename,
+                user_filename=filename,
+                uploader_id=current_user.id,
+                comment_id=comment.id
+            )
+            db.session.add(up)
         db.session.commit()
         return redirect(url_for('main.submit'))
     return render_template('main/comment_on.html', form=form, paper=paper,
                            title='Comment')
+
+
+@bp.route('/edit_comment/<int:comment_id>', methods=['GET', 'POST'])
+@login_required
+def edit_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    if comment.commenter_id != current_user.id:
+        abort(403)
+    form = EditCommentForm(comment=comment.text)
+    if form.validate_on_submit():
+        comment.text = form.comment.data
+        db.session.commit()
+        flash('Comment updated.')
+        return redirect(request.referrer or url_for('main.submit'))
+    return render_template('main/edit_comment.html', form=form, comment=comment)
 
 
 @bp.route('/message', methods=['GET', 'POST'])
@@ -427,13 +555,16 @@ def message():
 
 
 def validate_image(stream):
-    header = stream.read(512)  # 512 bytes should be enough for a header check
-    stream.seek(0)  # reset stream pointer
-    format = imghdr.what(None, header)
-    if not format:
+    try:
+        # Pillow can open from a BytesIO stream
+        image = Image.open(io.BytesIO(stream.read()))
+        stream.seek(0)  # reset stream pointer after reading
+        format = image.format.lower()  # 'JPEG' → 'jpeg', 'PNG' → 'png'
+        return '.' + (format if format != 'jpeg' else 'jpg')
+    except (IOError, ValueError):
+        # Not a valid image
+        stream.seek(0)
         return None
-    return '.' + (format if format != 'jpeg' else 'jpg')
-
 
 def get_clean_username():
     cur_user_name = current_user.username
@@ -593,10 +724,11 @@ def store_upload(uploaded_file):
 def files(path):
     return send_from_directory(current_app.config['UPLOAD_PATH'],path)
 
-# @bp.route('/download/<filename>')
-# @login_required
-# def download(filename):
-#     print(Upload.query.filter(Upload.external_filename == filename).first().internal_filename)
-#     file = Upload.query.filter(Upload.external_filename == filename).first()
-#     filename = file.internal_filename
-#     return send_from_directory(current_app.config['UPLOAD_PATH'], filename, as_attachment=True)
+@bp.route('/download/<filename>')
+@login_required
+def download(filename):
+    file = Upload.query.filter(Upload.external_filename == filename).first()
+    if not file:
+        abort(404)
+    internal_filename = file.internal_filename
+    return send_from_directory(current_app.config['UPLOAD_PATH'], internal_filename, as_attachment=True)

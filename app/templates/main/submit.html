@@ -40,11 +40,20 @@
   </form>
   <hr><br>
   <form action='' method='post'>
+    <div class="list-filter">
+      <label for="paper-filter">Filter papers:</label>
+      <input id="paper-filter" type="search" placeholder="type to filter by title, author or submitter" />
+      <button type="button" id="clear-filter">Clear</button>
+    </div>
+    <div class="papers-grid">
     {% for i in editforms %}
       {% set paper = i[0] %}
-      {% include 'main/_paper.html' %}
-      {{ i[1].hidden_tag() }}
-      <div class='vote'>
+      <div class="paper-wrap">
+        <div class="card paper-item">
+          {% include 'main/_paper.html' with context %}
+        </div>
+        <div class='vote action-bar'>
+          {{ i[1].hidden_tag() }}
 	{% if i[0].subber==current_user %}
 	  {{ i[1].unsubmit() }}
 	{% endif %}
@@ -56,21 +65,30 @@
 	  {{ i[1].vol_later() }}
 	{% endif %}
 	{{ i[1].comment }}
+        </div>
       </div>
-      {##}</div>
     {% endfor %}
+    </div>
 </form>
 
 {% endblock %}
 {#{% block scripts %}#}
-{#    <script type="text/javascript">#}
-{#        window.addEventListener('keydown',function(e){#}
-{#            if(e.keyIdentifier=='U+000A'||e.keyIdentifier=='Enter'||e.keyCode==13) {#}
-{#                if(e.target.nodeName=='INPUT'&&e.target.type=='text'){#}
-{#                    e.preventDefault();#}
-{#                    return false;#}
-{#                }#}
-{#            }#}
-{#        },true);#}
-{#    </script>#}
-{#{% endblock %}#}
+{% block scripts %}
+{{ super() }}
+<script>
+;(function(){
+  const input = document.getElementById('paper-filter');
+  const clear = document.getElementById('clear-filter');
+  if(!input) return;
+  function filter(){
+    const q = input.value.toLowerCase().trim();
+    document.querySelectorAll('.paper-wrap').forEach(function(el){
+      const text = el.innerText.toLowerCase();
+      el.style.display = q === '' || text.indexOf(q) !== -1 ? '' : 'none';
+    });
+  }
+  input.addEventListener('input', filter);
+  clear.addEventListener('click', function(){ input.value=''; filter(); input.focus(); });
+})();
+</script>
+{% endblock %}

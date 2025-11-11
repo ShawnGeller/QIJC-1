@@ -4,7 +4,7 @@ from flask import (Flask, render_template, request, flash,
                    redirect, url_for)
 from sqlalchemy import func
 from datetime import datetime, timedelta
-from werkzeug.urls import url_parse
+from urllib.parse import urlparse
 from app.auth.forms import (LoginForm, RegistrationForm,
                             ManageUserForm, ResetPasswordRequestForm,
                             ResetPasswordForm)
@@ -37,7 +37,7 @@ def login():
             return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
-        if not next_page or url_parse(next_page).netloc != '':
+        if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for('main.index')
         return redirect(next_page)
     return render_template('auth/login.html', title='Sign in', form=form)

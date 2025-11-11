@@ -1,25 +1,21 @@
 {% extends 'base.html' %}
 
 {% block app_content %}
-{% include 'main/_paper.html' %}
-<form action='' method='post' enctype="multipart/form-data">
-{{ form.hidden_tag() }}
-{{ form.comment.label }}<br>
-{{ form.comment(size=64, style="height: 100px;width: 400px;") }}<br>
-{#    Allowed filetypes are jpg, png, gif, pdf#}
-{#{{ form.file() }}<br>#}
-{{ form.submit() }}
-</form>
+<div class="card">
+	{% include 'main/_paper.html' %}
+</div>
+<div class="card">
+	<form action="" method="post" enctype="multipart/form-data" style="max-width:820px;">
+		{{ form.hidden_tag() }}
+		<div>
+			{{ form.comment.label }}<br>
+			{{ form.comment(rows=5, style="width:100%;") }}
+		</div>
+		<div style="margin-top:8px;">
+			<label>Allowed filetypes: jpg, png, gif, pdf</label><br>
+			{{ form.file(accept='image/*,application/pdf') }}
+		</div>
+		<div style="margin-top:10px;">{{ form.submit() }}</div>
+	</form>
+</div>
 {% endblock %}
-{#{% block scripts %}#}
-{#<script type="text/javascript">#}
-{#    window.addEventListener('keydown',function(e){#}
-{#        if(e.keyIdentifier=='U+000A'||e.keyIdentifier=='Enter'||e.keyCode==13) {#}
-{#            if(e.target.nodeName=='INPUT'&&e.target.type=='text'){#}
-{#                e.preventDefault();#}
-{#                return false;#}
-{#            }#}
-{#        }#}
-{#    },true);#}
-{#</script>#}
-{#{% endblock %}#}

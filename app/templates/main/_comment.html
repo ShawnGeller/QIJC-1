@@ -2,3 +2,33 @@
 {% if comment.upload %}
     Attachment: <a href="{{ url_for('main.download', filename=comment.upload.external_filename) }}">{{ comment.upload.user_filename }}</a>
 {% endif %}
+{% if current_user.is_authenticated and current_user.id == comment.commenter_id %}
+    <a href="{{ url_for('main.edit_comment', comment_id=comment.id) }}">Edit</a>
+        {# Use a JS-created form to avoid nested form issues in pages that wrap the paper list in a form #}
+                        {% if delete_form is defined %}
+                                <button type="button" class="delete-comment-btn" data-cid="{{ comment.id }}" data-root="{{ request.script_root }}">Delete</button>
+                        {% else %}
+                <form action="{{ url_for('main.delete_comment', comment_id=comment.id) }}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('Delete this comment and any attached file?');">Delete</button>
+                </form>
+            {% endif %}
+{% endif %}
+{% if delete_form is defined %}
+<script>
+;(function(){
+    document.addEventListener('click', function(e){
+        var btn = e.target.closest && e.target.closest('.delete-comment-btn');
+        if(!btn) return;
+        if(!confirm('Delete this comment and any attached file?')) return;
+        var cid = btn.getAttribute('data-cid');
+    var root = btn.getAttribute('data-root') || '';
+    var action = (root || '') + '/delete_comment/' + cid;
+        var f = document.createElement('form');
+        f.method = 'POST'; f.action = action; f.style.display='none';
+        var i = document.createElement('input'); i.type='hidden'; i.name='csrf_token';
+        var csrfInput = document.querySelector("input[name='csrf_token']"); i.value = csrfInput ? csrfInput.value : '';
+        f.appendChild(i); document.body.appendChild(f); f.submit();
+    });
+})();
+</script>
+{% endif %}
