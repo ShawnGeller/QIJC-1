@@ -2,10 +2,9 @@ import uuid
 from flask import current_app
 from app import db, login
 from datetime import datetime, timedelta
-from time import time
-import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+from itsdangerous import URLSafeTimedSerializer as Serializer, BadSignature, SignatureExpired
 
 @login.user_loader
 def load_user(id):
@@ -40,20 +39,17 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def get_reset_password_token(self, expires_in=600):
-        token = jwt.encode(
-            {'reset_password': self.id, 'exp': time() + expires_in},
-            current_app.config['SECRET_KEY'],
-            algorithm='HS256').decode('utf-8')
-        return token
+        s = Serializer(current_app.config['SECRET_KEY'], salt='password-reset-salt')
+        return s.dumps({'reset_password': self.id})
 
     @staticmethod
-    def verify_reset_password_token(token):
+    def verify_reset_password_token(token, max_age=600):
+        s = Serializer(current_app.config['SECRET_KEY'], salt='password-reset-salt')
         try:
-            id = jwt.decode(token, current_app.config['SECRET_KEY'],
-                            algorithms=['HS256'])['reset_password']
-        except:
-            return
-        return User.query.get(id)
+            data = s.loads(token, max_age=max_age)
+        except (SignatureExpired, BadSignature):
+            return None
+        return User.query.get(data.get('reset_password'))
 
     def sumpoints(self):
         sp = 0
@@ -90,7 +86,6 @@ class Paper(db.Model):
     voted = db.Column(db.Date)
     score_n = db.Column(db.Integer)
     score_d = db.Column(db.Integer)
-    # comment = db.Column(db.String(256))
     
     # Relationships
     subber_id = db.Column(db.Integer, db.ForeignKey('user.id'))

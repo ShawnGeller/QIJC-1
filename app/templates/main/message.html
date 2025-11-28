@@ -17,26 +17,56 @@ tr:hover{
 
 </style>
 <br>
-<form action='' method='post'>
-  {{ form.hidden_tag() }}
-  <table class='messaging'>
-    <tr>
-      <td>{{ form.e_from.label }}:</td>
-      <td>{{ form.e_from(size=64, value=current_user.email) }}</td>
-    </tr>
-    <tr>
-      <td>{{ form.subject.label }}:</td>
-      <td>{{ form.subject(size=64, value='Quantum Information Journal Club') }}</td>
-    </tr>
-    <tr>
-      <td>{{ form.body.label }}:</td>
-      <td>{{ form.body(cols=64, style='height: 200px') }}</td>
-    </tr>
-    <tr>
-      <td>{{ form.abstracts.label }}</td>
-      <td>{{ form.abstracts() }}</td>
-    </tr>
-  </table>
-  {{ form.submit(style='margin: 5px; padding: 5px') }}
+<form method="post" action="" style="max-width:900px;">
+  <div>
+    <label>Subject</label><br>
+    <input name="subject" style="width:100%;" required>
+  </div>
+
+  <div style="margin-top:8px;">
+    <label>Body</label><br>
+    <textarea name="body" rows="8" style="width:100%;" required></textarea>
+  </div>
+
+  <div style="margin-top:8px;">
+    <label>Recipients</label><br>
+    <label><input type="radio" name="recipients_mode" value="everyone" checked> Everyone</label><br>
+    <label><input type="radio" name="recipients_mode" value="selected"> Selected users</label><br>
+    <label><input type="radio" name="recipients_mode" value="manual"> Manual emails (comma separated)</label>
+  </div>
+
+  <div id="selected-block" style="margin-top:8px; display:none;">
+    <label>Pick users (hold Ctrl / Cmd to multi-select)</label><br>
+    <select name="selected_users" multiple size="8" style="width:100%;">
+      {% for u in users %}
+        <option value="{{ u.id }}">{{ u.firstname }} {{ u.lastname }} &lt;{{ u.email }}&gt;</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div id="manual-block" style="margin-top:8px; display:none;">
+    <label>Manual emails (comma separated)</label><br>
+    <input name="manual_emails" style="width:100%;" placeholder="user@example.com, other@example.com">
+  </div>
+
+  <div style="margin-top:10px;">
+    <button type="submit">Send</button>
+  </div>
 </form>
+
+<script>
+(function(){
+  const radios = document.querySelectorAll('input[name="recipients_mode"]');
+  const sel = document.getElementById('selected-block');
+  const man = document.getElementById('manual-block');
+
+  function update(){
+    const v = document.querySelector('input[name="recipients_mode"]:checked').value;
+    sel.style.display = (v==='selected') ? 'block' : 'none';
+    man.style.display = (v==='manual') ? 'block' : 'none';
+  }
+  radios.forEach(r=>r.addEventListener('change', update));
+  document.addEventListener('DOMContentLoaded', update);
+})();
+</script>
 {% endblock %}

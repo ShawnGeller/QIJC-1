@@ -1,15 +1,66 @@
+<style>
+  /* undo magnifying / sticky changes and remove left gap so text starts at the box edge */
+  .paper-row { margin-bottom: 1rem; display: block; }
+  .paper-meta { display: none; }
+  .paper-body {
+    padding: 6px 8px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .paper-title { font-size: 18px; font-weight: 700; margin-bottom: 0.25rem; }
+  .paper-authors { font-size: 13px; color: #333; margin-bottom: 0.4rem; }
+  .paper-sub { position: static; background: transparent; padding-bottom: 2px; font-size: 13px; margin-bottom: 6px; }
+  .paper-abstract { white-space: normal; word-break: break-word; margin-top: 0.5rem; font-size: 14px; }
+  .paper-wrap, .paper-item { overflow: visible; padding: 0; }
+  .paper-item > .paper-body { padding-left: 0; }
+
+  /* New comments layout */
+  .comments-section {
+    border-top: 1px solid #e0e0e0;
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+  }
+  .comments-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:0.5rem;
+    font-weight:600;
+  }
+  .comments-count { color:#666; font-weight:400; font-size:0.95em; }
+  .add-comment-prompt { margin-bottom:0.6rem; }
+  .show-comment-form {
+    background:#007acc; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;
+    font-size:0.95em;
+  }
+  .comments-list { display:block; gap:8px; }
+  .comment-item {
+    border:1px solid #f0f0f0;
+    background:#fafafa;
+    padding:8px;
+    border-radius:6px;
+    margin-bottom:6px;
+  }
+  .comment-meta { font-size:12px; color:#444; margin-bottom:4px; }
+  .comment-body { font-size:13px; color:#111; white-space:pre-wrap; word-break:break-word; }
+</style>
+
 <div class="paper-row">
   <div class="paper-meta" style="flex:0 0 140px; max-width:140px;">
-    {% if showsub %}
-      <div><a href="{{ url_for('main.user', username=paper.subber.username) }}">{{ paper.subber.firstname }}</a></div>
-      {% if paper.volunteer and paper.volunteer.firstname %}
-        <div>&#8594; <a href="{{ url_for('main.user', username=paper.volunteer.username) }}">{{ paper.volunteer.firstname }}</a></div>
-      {% elif paper.vol_later and paper.vol_later.firstname %}
-        <div>&#8594; <a href="{{ url_for('main.user', username=paper.vol_later.username) }}">{{ paper.vol_later.firstname }} (later)</a></div>
-      {% endif %}
-    {% endif %}
+    <!-- metadata column left intentionally minimal so names appear above title for better visibility when zoomed -->
   </div>
   <div class="paper-body">
+    {% if showsub %}
+      <div class="paper-sub" style="margin-bottom:6px;">
+        <a href="{{ url_for('main.user', username=paper.subber.username) }}">{{ paper.subber.firstname }}</a>
+        {% if paper.volunteer and paper.volunteer.firstname %}
+          &nbsp;&#8594;&nbsp;<a href="{{ url_for('main.user', username=paper.volunteer.username) }}">{{ paper.volunteer.firstname }}</a>
+        {% elif paper.vol_later and paper.vol_later.firstname %}
+          &nbsp;&#8594;&nbsp;<a href="{{ url_for('main.user', username=paper.vol_later.username) }}">{{ paper.vol_later.firstname }} (later)</a>
+        {% endif %}
+      </div>
+    {% endif %}
     <div class="paper-title title">{{ paper.title }}</div>
     <div class="paper-authors">{{ paper.authors }}</div>
     <div class="paper-links">
@@ -18,12 +69,27 @@
         <div><a href='{{ paper.pdf_url }}' target='_blank'>{{ paper.pdf_url }}</a></div>
       {% endif %}
     </div>
-  <div class="paper-abstract">{{ paper.abstract }}</div>
+  <div class="paper-abstract">
+    {{ paper.abstract | safe }}
+  </div>
     {% if showsub and paper.comments %}
-      <div class='comment'><strong>Comments:</strong>
-        {% for comment in paper.comments %}
-          {% include 'main/_comment.html' with context %}
-        {% endfor %}
+      <div class="comments-section">
+        <div class="comments-header">
+          <div>Discussion</div>
+          <div class="comments-count">({{ paper.comments|length }})</div>
+        </div>
+
+        <div class="add-comment-prompt">
+          <button type="button" class="show-comment-form" onclick="(function(btn){ const wrap=btn.closest('.paper-row'); const f=wrap && wrap.querySelector('form.comment-form'); if(f) f.style.display = f.style.display === 'none' ? 'block' : 'none'; })(this);">Add comment</button>
+        </div>
+
+        <div class="comments-list">
+          {% for comment in paper.comments %}
+            <div class="comment-item">
+              {% include 'main/_comment.html' with context %}
+            </div>
+          {% endfor %}
+        </div>
       </div>
     {% endif %}
     {% if showvote %}

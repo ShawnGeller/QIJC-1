@@ -67,15 +67,52 @@ document.addEventListener('click', function (e) {
 
 {% block scripts %}
     <script>
-        const denominators = document.querySelectorAll('.vote-den')
-        for (let denominator of denominators) {
-            denominator.addEventListener('input', function(){
-                for (let d of denominators) {
-                    if (d.readOnly===false) {
-                        d.value = denominator.value;
-                    }
-                }
-            })
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$','$'], ['\\(', '\\)']],
+                displayMath: [['$$','$$']],
+                processEscapes: true
+            }
+        };
+    </script>
+    <script id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <script>
+      // Wait for MathJax to be fully ready, then typeset the whole document.
+      function whenMathJaxReady(timeout = 5000) {
+        return new Promise(resolve => {
+          if (window.MathJax && MathJax.startup && MathJax.startup.promise) {
+            MathJax.startup.promise.then(() => resolve());
+            return;
+          }
+          const s = document.getElementById('MathJax-script');
+          if (s) s.addEventListener('load', () => resolve());
+          // fallback poll
+          const start = Date.now();
+          const iv = setInterval(() => {
+            if (window.MathJax && MathJax.typesetPromise) {
+              clearInterval(iv); resolve();
+            } else if (Date.now() - start > timeout) {
+              clearInterval(iv); resolve();
+            }
+          }, 100);
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        whenMathJaxReady().then(() => {
+          if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise().catch(()=>{/* ignore */});
+          }
+        });
+      });
+
+      // Also typeset after window load (covers late-inserted content)
+      window.addEventListener('load', () => {
+        if (window.MathJax && MathJax.typesetPromise) {
+          MathJax.typesetPromise().catch(()=>{/* ignore */});
         }
+      });
     </script>
 {% endblock %}

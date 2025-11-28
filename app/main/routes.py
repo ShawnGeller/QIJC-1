@@ -24,83 +24,6 @@ from app.main import bp
 from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullVoteForm, SearchForm,
                             FullEditForm, CommentForm, MessageForm,
-                            AnnouncementForm, DeleteCommentForm)
-from app.auth.forms import ChangePasswordForm, ChangeEmailForm, ChangeNameForm
-from app.models import User, Paper, Announcement, Upload, Comment
-from app.email import send_abstracts
-
-last_month = datetime.today() - timedelta(days=30)
-
-# ...existing code...
-
-@bp.route('/delete_comment/<int:comment_id>', methods=['POST'])
-@login_required
-def delete_comment(comment_id):
-    comment = Comment.query.get_or_404(comment_id)
-    # debug ownership
-    try:
-        uid = int(current_user.get_id())
-    except Exception:
-        uid = current_user.get_id()
-    print(f"Ownership: current_user_id={uid}, comment_owner={comment.commenter_id}")
-    if comment.commenter_id != uid:
-        print("Ownership mismatch, aborting delete.")
-        abort(403)
-    # Delete associated upload if exists
-    print(f"Attempting to delete comment {comment.id} by user {current_user.id}")
-    if comment.upload:
-        # Always query Upload from session to ensure it's attached
-        upload = Upload.query.filter_by(comment_id=comment.id).first()
-        if upload:
-            print(f"Found upload: {upload.internal_filename}")
-            upload_path = current_app.config["UPLOAD_PATH"]
-            file_path = os.path.join(upload_path, upload.internal_filename)
-            print(f"Upload path: {file_path}")
-            try:
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                    print("File deleted from disk.")
-                else:
-                    print("File not found on disk.")
-            except Exception as e:
-                print(f"Error deleting file: {e}")
-            db.session.delete(upload)
-            print("Upload deleted from DB.")
-        else:
-            print("No upload found for this comment in DB.")
-    else:
-        print("No upload found for this comment.")
-    db.session.delete(comment)
-    db.session.commit()
-    print("Comment deleted from DB.")
-    flash('Comment deleted.')
-    return redirect(request.referrer or url_for('main.index'))
-import os
-import re
-import uuid
-from datetime import datetime, timedelta
-from textwrap import dedent
-
-import operator
-import time
-import arxiv
-import PyPDF2
-from PyPDF2 import PdfFileReader
-from PIL import Image
-
-from flask import (Flask, render_template, request,
-                   flash, redirect, url_for, session, abort,
-                   send_from_directory, current_app)
-from markupsafe import Markup
-from flask_login import (current_user, login_user, logout_user, login_required)
-from sqlalchemy import cast, Float
-from werkzeug.utils import secure_filename
-from urllib.parse import urlparse, urljoin
-from app import db
-from app.main import bp
-from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
-                            FullVoteForm, SearchForm,
-                            FullEditForm, CommentForm, MessageForm,
                             AnnouncementForm, EditCommentForm, DeleteCommentForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm, ChangeNameForm
 from app.models import User, Paper, Announcement, Upload, Comment
@@ -160,7 +83,7 @@ def submit():
     if form.submit.data and form.validate_on_submit():
         # link_str = form.link.data.split('?')[0].split('.pdf')[0]
         link_str = form.link.data
-        m = re.match(".*/([0-9.]+\d).*", link_str)
+        m = re.match(r".*/([0-9.]+\d).*", link_str)
         # print(m,flush=True)
         if m is not None:
             id = m.groups()[0]
@@ -530,29 +453,40 @@ def edit_comment(comment_id):
 @bp.route('/message', methods=['GET', 'POST'])
 @login_required
 def message():
-    form = MessageForm()
-    if form.validate_on_submit():
-        subject = form.subject.data
-        e_from = '[' + form.e_from.data + ']'
-        body = form.body.data
-        attach = form.abstracts.data
-        papers_v = (Paper.query.filter(Paper.voted == None)
-                    .filter(Paper.volunteer_id != None)
-                    .order_by(Paper.timestamp.desc()).all())
-        papers_ = (Paper.query.filter(Paper.voted == None)
-                   .order_by(Paper.timestamp.desc()).all())
-        papers = papers_v + papers_
-        send_abstracts(e_from, subject, body, papers)
-    bodydefault = dedent('''    The abstracts for this week are attached.
+    # optional: restrict to admins
+    if not getattr(current_user, 'admin', False):
+        return redirect(url_for('main.index'))
 
-    Please log in if you want to claim a paper to discuss.
+    users = User.query.filter(~User.retired).order_by(User.firstname, User.lastname).all()
+    if request.method == 'POST':
+        subject = request.form.get('subject', '').strip()
+        body = request.form.get('body', '').strip()
+        mode = request.form.get('recipients_mode', 'everyone')
+        user_ids = []
+        manual_emails = None
 
-    Best, {}.
-    '''.format(current_user.firstname))
-    form.body.data = bodydefault
-    return render_template('main/message.html', form=form,
-                           bodydefault=bodydefault)
+        if mode == 'selected':
+            raw_ids = request.form.getlist('selected_users')
+            try:
+                user_ids = [int(x) for x in raw_ids if x]
+            except ValueError:
+                user_ids = []
+        elif mode == 'manual':
+            manual_raw = request.form.get('manual_emails', '')
+            manual_emails = [e.strip() for e in manual_raw.split(',') if e.strip()]
 
+        # choose papers as needed; here send all papers or supply empty list
+        papers = Paper.query.order_by(Paper.timestamp.desc()).all()
+
+        sender = current_app.config.get('ADMINS',
+                 [ current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@example.com') ])[0]
+
+        send_abstracts(sender, subject, body, papers,
+                       mode=mode, user_ids=user_ids, manual_emails=manual_emails)
+
+        return redirect(url_for('main.message'))
+
+    return render_template('main/message.html', users=users)
 
 def validate_image(stream):
     try:
@@ -584,7 +518,7 @@ def get_upload_dir():
 
 
 def clean_pdf_name(fname):
-    m = re.match("(.+)\.pdf", fname)
+    m = re.match(r"(.+)\.pdf", fname)
     if m is not None:
         f = m.groups()[0]
         allowed_chars = "_-"
