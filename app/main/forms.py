@@ -75,6 +75,7 @@ class ManualSubmissionForm(FlaskForm):
     abstract = StringField('Abstract', validators=[DataRequired()])
     volunteering = BooleanField("I'm volunteering to discuss this paper.")
     comments = StringField('Comments (optional)')
+    attachment = FileField()                 # <-- add this line
     submit = SubmitField('Submit paper.')
 
     def validate_link(self, link):

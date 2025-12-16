@@ -415,20 +415,22 @@ def comment_on():
         db.session.add(comment)
         db.session.flush()  # Get comment.id before commit
         if uploaded_file and uploaded_file.filename:
-            filename = secure_filename(uploaded_file.filename)
-            unique_name = str(uuid.uuid4()) + "_" + filename
-            upload_dir = current_app.config.get("UPLOAD_PATH", os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
-            os.makedirs(upload_dir, exist_ok=True)
-            file_path = os.path.join(upload_dir, unique_name)
-            uploaded_file.save(file_path)
-            up = Upload(
-                internal_filename=unique_name,
-                external_filename=filename,
-                user_filename=filename,
-                uploader_id=current_user.id,
-                comment_id=comment.id
-            )
-            db.session.add(up)
+            # save into per-user folder (store_upload returns "success" or None)
+            r = store_upload(uploaded_file)
+            if r:
+                cleaned = clean_pdf_name(uploaded_file.filename)
+                if cleaned:
+                    # internal filename must include the user's subdirectory,
+                    # because store_upload saves to UPLOAD_PATH/<username>/<cleaned>
+                    internal_path = os.path.join(current_user.username, cleaned)
+                    up = Upload(
+                        internal_filename=internal_path,
+                        external_filename=cleaned,
+                        user_filename=uploaded_file.filename,
+                        uploader_id=current_user.id,
+                        comment_id=comment.id
+                    )
+                    db.session.add(up)
         db.session.commit()
         return redirect(url_for('main.submit'))
     return render_template('main/comment_on.html', form=form, paper=paper,

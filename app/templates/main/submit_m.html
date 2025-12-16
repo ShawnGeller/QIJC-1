@@ -1,38 +1,104 @@
 {% extends 'base.html' %}
 
 {% block app_content %}
-<h1>Submit Paper Manually</h1>
-<form action='' method='post'>
+<h1>Submit Paper</h1>
+
+<form action='' method='post' enctype='multipart/form-data' class="submit-form">
   {{ form.hidden_tag() }}
 
-  {% macro errors(source) -%}
-  {% for error in source %}
-  <span style='color: red;'>[{{ error }}]</span>
-  {% endfor %}
-  {%- endmacro %}
+  <style>
+    .submit-grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:start; }
+    .submit-card { border:1px solid #e6e6e6; padding:12px; border-radius:6px; background:#fff; }
+    .submit-card h3 { margin:0 0 8px 0; font-size:1.05rem; }
+    .field-row { margin-bottom:10px; }
+    label.small { display:block; font-size:0.85rem; color:#444; margin-bottom:6px; }
+    .file-info { font-size:0.9rem; color:#666; margin-top:6px; }
+    @media (max-width:720px) { .submit-grid { grid-template-columns: 1fr; } }
+  </style>
 
-  {% set list = [form.title, form.link, form.authors] %}
-  {% for field in list %}
+  <div class="submit-grid">
+    <!-- Upload column -->
+    <div class="submit-card">
+      <h3>Upload PDF (optional)</h3>
+      <div class="field-row">
+        <label class="small" for="attachment">Upload PDF (optional)</label>
+        {% if form.attachment %}
+          {{ form.attachment() }}
+        {% else %}
+          <input type="file" id="attachment" name="attachment" accept="application/pdf">
+        {% endif %}
+        <div id="upload-preview" class="file-info">No file chosen</div>
+      </div>
 
-  {{ field.label }}<br>
-  {{ field(size=64) }}<br>
-  {{ errors(field.errors) }}
-  {% endfor %}
+      <div style="font-size:0.95rem;color:#555;margin-bottom:12px;">
+        Tip: Uploading a PDF can auto-fill metadata on the server if supported. You can still enter or edit title/authors/abstract below.
+      </div>
+    </div>
 
-  {{ form.abstract.label }}<br>
-  {{ form.abstract(size=64, style='height: 200px;') }}<br>
-    {#            Allowed filetypes are jpg, png, gif, pdf#}
-    {#        {{ form.attachment() }}<br>#}
-  {{ errors(form.abstract.errors) }}
+    <!-- Manual entry column -->
+    <div class="submit-card">
+      <h3>Manual entry</h3>
 
-  {{ form.volunteering.label }}
-  {{ form.volunteering }}<br>
-  <br>
-  {{ form.submit() }}
+      {% macro errors(source) -%}
+      {% for error in source %}
+        <span style='color: red;'>[{{ error }}]</span>
+      {% endfor %}
+      {%- endmacro %}
+
+      <div class="field-row">
+        <label class="small">{{ form.title.label }}</label>
+        {{ form.title(size=64) }}
+        {{ errors(form.title.errors) }}
+      </div>
+
+      <div class="field-row">
+        <label class="small">{{ form.authors.label }}</label>
+        {{ form.authors(size=64) }}
+        {{ errors(form.authors.errors) }}
+      </div>
+
+      <div class="field-row">
+        <label class="small">{{ form.link.label }} (optional)</label>
+        {{ form.link(size=64) }}
+        {{ errors(form.link.errors) }}
+      </div>
+
+      <div class="field-row">
+        <label class="small">{{ form.abstract.label }}</label>
+        {{ form.abstract(size=64, style='height: 200px;') }}
+        {{ errors(form.abstract.errors) }}
+      </div>
+
+      <div class="field-row">
+        <label class="small">{{ form.volunteering.label }}</label>
+        {{ form.volunteering }}
+      </div>
+
+      <div class="field-row">
+        {{ form.submit(class="btn btn-primary") }}
+      </div>
+    </div>
+  </div>
+
 </form>
+
 <br><hr><br>
+
 {% for paper in papers %}
-{% include 'main/_paper.html' %}
+  {% include 'main/_paper.html' %}
 {% endfor %}
+
+<script>
+  // Show selected filename for upload field
+  (function(){
+    const fileInput = document.querySelector('input[type="file"][name="attachment"]');
+    const preview = document.getElementById('upload-preview');
+    if (!fileInput || !preview) return;
+    fileInput.addEventListener('change', function(){
+      const f = this.files && this.files[0];
+      preview.textContent = f ? (f.name + ' (' + Math.round(f.size/1024) + ' KB)') : 'No file chosen';
+    });
+  })();
+</script>
 
 {% endblock %}
