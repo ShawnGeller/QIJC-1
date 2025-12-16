@@ -1373,3 +1373,543 @@ ConnectionRefusedError: [WinError 10061] No connection could be made because the
 2025-12-16 01:17:16,885 INFO: QIJC app starting [in C:\inetpub\wwwroot\QIJC-1\app\__init__.py:52]
 2025-12-16 01:50:09,103 INFO: QIJC app starting [in C:\inetpub\wwwroot\QIJC-1\app\__init__.py:52]
 2025-12-16 02:49:53,006 INFO: QIJC app starting [in C:\inetpub\wwwroot\QIJC-1\app\__init__.py:52]
+2025-12-16 15:14:28,938 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:15:28,034 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:16:16,159 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:16:56,172 ERROR: Exception on /uploads [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 544, in uploads
+    updir = get_upload_dir()
+  File "/Users/diyora/QIJC/app/main/routes.py", line 518, in get_upload_dir
+    p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+KeyError: 'UPLOAD_PATH'
+2025-12-16 15:16:57,319 ERROR: Exception on /uploads [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 544, in uploads
+    updir = get_upload_dir()
+  File "/Users/diyora/QIJC/app/main/routes.py", line 518, in get_upload_dir
+    p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+KeyError: 'UPLOAD_PATH'
+2025-12-16 15:17:08,193 ERROR: Exception on /uploads [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 544, in uploads
+    updir = get_upload_dir()
+  File "/Users/diyora/QIJC/app/main/routes.py", line 518, in get_upload_dir
+    p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+KeyError: 'UPLOAD_PATH'
+2025-12-16 15:20:32,968 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:20:38,563 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 206, in submit
+    updir = get_upload_dir()
+  File "/Users/diyora/QIJC/app/main/routes.py", line 565, in get_upload_dir
+    p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+KeyError: 'UPLOAD_PATH'
+2025-12-16 15:20:41,892 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 206, in submit
+    updir = get_upload_dir()
+  File "/Users/diyora/QIJC/app/main/routes.py", line 565, in get_upload_dir
+    p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+KeyError: 'UPLOAD_PATH'
+2025-12-16 15:20:43,572 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 206, in submit
+    updir = get_upload_dir()
+  File "/Users/diyora/QIJC/app/main/routes.py", line 565, in get_upload_dir
+    p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+KeyError: 'UPLOAD_PATH'
+2025-12-16 15:20:44,438 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 206, in submit
+    updir = get_upload_dir()
+  File "/Users/diyora/QIJC/app/main/routes.py", line 565, in get_upload_dir
+    p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+KeyError: 'UPLOAD_PATH'
+2025-12-16 15:20:47,051 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 206, in submit
+    updir = get_upload_dir()
+  File "/Users/diyora/QIJC/app/main/routes.py", line 565, in get_upload_dir
+    p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+KeyError: 'UPLOAD_PATH'
+2025-12-16 15:20:49,757 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 206, in submit
+    updir = get_upload_dir()
+  File "/Users/diyora/QIJC/app/main/routes.py", line 565, in get_upload_dir
+    p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+KeyError: 'UPLOAD_PATH'
+2025-12-16 15:20:53,928 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 206, in submit
+    updir = get_upload_dir()
+  File "/Users/diyora/QIJC/app/main/routes.py", line 565, in get_upload_dir
+    p = os.path.join(current_app.config['UPLOAD_PATH'], cur_user_name)
+KeyError: 'UPLOAD_PATH'
+2025-12-16 15:22:11,961 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:25,974 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:26,546 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:26,546 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:27,100 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:27,100 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:27,100 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:27,588 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:27,588 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:27,588 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:27,588 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,394 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,394 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,394 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,394 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,394 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,730 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,730 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,730 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,730 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,730 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,730 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,762 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,762 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,762 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,762 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,762 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,762 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:33:28,762 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:34:51,083 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:36:08,303 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 15:38:07,186 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 16:28:07,020 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 16:30:36,486 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 16:32:04,801 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 16:34:22,824 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 16:40:37,432 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 16:43:51,217 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 16:50:11,377 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 16:58:37,861 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:00:00,349 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:00:18,532 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:03:47,783 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:04:52,957 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:06:44,048 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:07:13,503 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:08:50,733 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:10:19,479 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:10:50,008 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:12:30,412 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:18:29,598 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:22:35,414 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:27:18,589 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:27:21,107 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 177, in submit
+    editform = FullEditForm(edits=range(len(papers)))
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 208, in __call__
+    return type.__call__(cls, *args, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_wtf/form.py", line 73, in __init__
+    super().__init__(formdata=formdata, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 286, in __init__
+    self.process(formdata, obj, data=data, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 127, in process
+    field.process(formdata, data, extra_filters=field_extra_filters)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/list.py", line 93, in process
+    self._add_entry(formdata, obj_data)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/list.py", line 171, in _add_entry
+    field.process(formdata, data)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/form.py", line 59, in process
+    self.form = self.form_class(formdata=formdata, obj=data, prefix=prefix)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 198, in __call__
+    fields.sort(key=lambda x: (x[1].creation_counter, x[0]))
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 198, in <lambda>
+    fields.sort(key=lambda x: (x[1].creation_counter, x[0]))
+AttributeError: type object 'SelectField' has no attribute 'creation_counter'
+2025-12-16 17:27:22,245 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 177, in submit
+    editform = FullEditForm(edits=range(len(papers)))
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 208, in __call__
+    return type.__call__(cls, *args, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_wtf/form.py", line 73, in __init__
+    super().__init__(formdata=formdata, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 286, in __init__
+    self.process(formdata, obj, data=data, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 127, in process
+    field.process(formdata, data, extra_filters=field_extra_filters)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/list.py", line 93, in process
+    self._add_entry(formdata, obj_data)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/list.py", line 171, in _add_entry
+    field.process(formdata, data)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/form.py", line 59, in process
+    self.form = self.form_class(formdata=formdata, obj=data, prefix=prefix)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 198, in __call__
+    fields.sort(key=lambda x: (x[1].creation_counter, x[0]))
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 198, in <lambda>
+    fields.sort(key=lambda x: (x[1].creation_counter, x[0]))
+AttributeError: type object 'SelectField' has no attribute 'creation_counter'
+2025-12-16 17:27:28,672 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 177, in submit
+    editform = FullEditForm(edits=range(len(papers)))
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 208, in __call__
+    return type.__call__(cls, *args, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_wtf/form.py", line 73, in __init__
+    super().__init__(formdata=formdata, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 286, in __init__
+    self.process(formdata, obj, data=data, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 127, in process
+    field.process(formdata, data, extra_filters=field_extra_filters)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/list.py", line 93, in process
+    self._add_entry(formdata, obj_data)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/list.py", line 171, in _add_entry
+    field.process(formdata, data)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/form.py", line 59, in process
+    self.form = self.form_class(formdata=formdata, obj=data, prefix=prefix)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 198, in __call__
+    fields.sort(key=lambda x: (x[1].creation_counter, x[0]))
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 198, in <lambda>
+    fields.sort(key=lambda x: (x[1].creation_counter, x[0]))
+AttributeError: type object 'SelectField' has no attribute 'creation_counter'
+2025-12-16 17:27:31,516 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 177, in submit
+    editform = FullEditForm(edits=range(len(papers)))
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 208, in __call__
+    return type.__call__(cls, *args, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_wtf/form.py", line 73, in __init__
+    super().__init__(formdata=formdata, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 286, in __init__
+    self.process(formdata, obj, data=data, **kwargs)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 127, in process
+    field.process(formdata, data, extra_filters=field_extra_filters)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/list.py", line 93, in process
+    self._add_entry(formdata, obj_data)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/list.py", line 171, in _add_entry
+    field.process(formdata, data)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/fields/form.py", line 59, in process
+    self.form = self.form_class(formdata=formdata, obj=data, prefix=prefix)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 198, in __call__
+    fields.sort(key=lambda x: (x[1].creation_counter, x[0]))
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/wtforms/form.py", line 198, in <lambda>
+    fields.sort(key=lambda x: (x[1].creation_counter, x[0]))
+AttributeError: type object 'SelectField' has no attribute 'creation_counter'
+2025-12-16 17:29:22,382 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:32:31,006 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:33:36,023 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:35:33,909 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:38:06,000 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:40:00,313 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:43:30,730 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:43:47,670 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1900, in _execute_context
+    self.dialect.do_execute(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+sqlite3.OperationalError: no such table: nomination
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 241, in submit
+    nm = (Nomination.query.filter_by(paper_id=p.id, nominee_id=p.vol_later.id)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/query.py", line 2823, in first
+    return self.limit(1)._iter().first()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/query.py", line 2907, in _iter
+    result = self.session.execute(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 1712, in execute
+    result = conn._execute_20(statement, params or {}, execution_options)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1705, in _execute_20
+    return meth(self, args_10style, kwargs_10style, execution_options)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/sql/elements.py", line 333, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1572, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1943, in _execute_context
+    self._handle_dbapi_exception(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 2124, in _handle_dbapi_exception
+    util.raise_(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/util/compat.py", line 208, in raise_
+    raise exception
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1900, in _execute_context
+    self.dialect.do_execute(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: nomination
+[SQL: SELECT nomination.id AS nomination_id, nomination.timestamp AS nomination_timestamp, nomination.paper_id AS nomination_paper_id, nomination.nominee_id AS nomination_nominee_id, nomination.nominator_id AS nomination_nominator_id 
+FROM nomination 
+WHERE nomination.paper_id = ? AND nomination.nominee_id = ? ORDER BY nomination.timestamp DESC
+ LIMIT ? OFFSET ?]
+[parameters: (1919, 11, 1, 0)]
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+2025-12-16 17:43:48,761 ERROR: Exception on /submit [GET] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1900, in _execute_context
+    self.dialect.do_execute(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+sqlite3.OperationalError: no such table: nomination
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 241, in submit
+    nm = (Nomination.query.filter_by(paper_id=p.id, nominee_id=p.vol_later.id)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/query.py", line 2823, in first
+    return self.limit(1)._iter().first()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/query.py", line 2907, in _iter
+    result = self.session.execute(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 1712, in execute
+    result = conn._execute_20(statement, params or {}, execution_options)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1705, in _execute_20
+    return meth(self, args_10style, kwargs_10style, execution_options)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/sql/elements.py", line 333, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1572, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1943, in _execute_context
+    self._handle_dbapi_exception(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 2124, in _handle_dbapi_exception
+    util.raise_(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/util/compat.py", line 208, in raise_
+    raise exception
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1900, in _execute_context
+    self.dialect.do_execute(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: nomination
+[SQL: SELECT nomination.id AS nomination_id, nomination.timestamp AS nomination_timestamp, nomination.paper_id AS nomination_paper_id, nomination.nominee_id AS nomination_nominee_id, nomination.nominator_id AS nomination_nominator_id 
+FROM nomination 
+WHERE nomination.paper_id = ? AND nomination.nominee_id = ? ORDER BY nomination.timestamp DESC
+ LIMIT ? OFFSET ?]
+[parameters: (1919, 11, 1, 0)]
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+2025-12-16 17:45:36,887 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2025-12-16 17:46:04,473 ERROR: Exception on /submit [POST] [in /Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py:1741]
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1900, in _execute_context
+    self.dialect.do_execute(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+sqlite3.OperationalError: no such table: nomination
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 2525, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1822, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1820, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask/app.py", line 1796, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/Users/diyora/QIJC/app/main/routes.py", line 221, in submit
+    db.session.commit()
+  File "<string>", line 2, in commit
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 1451, in commit
+    self._transaction.commit(_to_root=self.future)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 829, in commit
+    self._prepare_impl()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 808, in _prepare_impl
+    self.session.flush()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 3386, in flush
+    self._flush(objects)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 3526, in _flush
+    transaction.rollback(_capture_exception=True)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    compat.raise_(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/util/compat.py", line 208, in raise_
+    raise exception
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 3486, in _flush
+    flush_context.execute()
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/unitofwork.py", line 456, in execute
+    rec.execute(self)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/unitofwork.py", line 630, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/persistence.py", line 245, in save_obj
+    _emit_insert_statements(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/orm/persistence.py", line 1238, in _emit_insert_statements
+    result = connection._execute_20(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1705, in _execute_20
+    return meth(self, args_10style, kwargs_10style, execution_options)
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/sql/elements.py", line 333, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1572, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1943, in _execute_context
+    self._handle_dbapi_exception(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 2124, in _handle_dbapi_exception
+    util.raise_(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/util/compat.py", line 208, in raise_
+    raise exception
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1900, in _execute_context
+    self.dialect.do_execute(
+  File "/Users/diyora/QIJC/venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: nomination
+[SQL: INSERT INTO nomination (timestamp, paper_id, nominee_id, nominator_id) VALUES (?, ?, ?, ?)]
+[parameters: ('2025-12-16 12:46:04.471936', 1913, 11, 0)]
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+2025-12-16 17:47:46,702 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]

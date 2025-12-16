@@ -1,78 +1,133 @@
 {% extends 'base.html' %}
 
 {% block app_content %}
-  <h1>Submit Paper</h1>
-  <form action='' method='post' enctype="multipart/form-data">
-    {{ form.hidden_tag() }}
+  <div class="row submit-row">
+    <div class="col-md-8">
+      <div class="panel panel-default tall-panel">
+        <div class="panel-heading"><h2 class="panel-title">Submit Paper</h2></div>
+        <div class="panel-body">
+          <form action='' method='post' enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
 
-    {% macro errors(source) -%}
-      {% for error in source %}
-	<span style='color: red;'>[{{ error }}]</span>
-      {% endfor %}
-    {%- endmacro %}
+            {% macro errors(source) -%}
+              {% for error in source %}
+                <div class="text-danger">{{ error }}</div>
+              {% endfor %}
+            {%- endmacro %}
 
-    <p>
-      Automatically handles arXiv links.
-      Otherwise, <a href='{{ url_for('main.submit_m') }}'>submit manually.</a>
-    </p>
-    <p>
-      {{ form.link.label }}<br>
-      {{ form.link(size=64) }}<br>
-      {{ errors(form.link.errors) }}
-    {% for subfield in form.volunteering %}
-    <tr>
-        <td>{{ subfield }}</td>
-        <td>{{ subfield.label }}</td>
-    </tr><br>
-    {% endfor %}
-    <p>
-      {{ form.comments.label }}<br>
-      {{ form.comments(size=64, style="width: 400px;") }}<br>
-{#            Allowed filetypes are jpg, png, gif, pdf#}
-{#        {{ form.attachment() }}<br>#}
-      {% for error in form.comments.errors %}
-	<span style='color: red;'>[{{ error }}]</span>
-      {% endfor %}
-    </p>
-    <p>
-      {{ form.submit() }}
-    </p>
-  </form>
-  <hr><br>
-  <form action='' method='post'>
-    <div class="list-filter">
-      <label for="paper-filter">Filter papers:</label>
-      <input id="paper-filter" type="search" placeholder="type to filter by title, author or submitter" />
-      <button type="button" id="clear-filter">Clear</button>
-    </div>
-    <div class="papers-grid">
-    {% for i in editforms %}
-      {% set paper = i[0] %}
-      <div class="paper-wrap">
-        <div class="card paper-item">
-          {% include 'main/_paper.html' with context %}
-        </div>
-        <div class='vote action-bar'>
-          {{ i[1].hidden_tag() }}
-	{% if i[0].subber==current_user %}
-	  {{ i[1].unsubmit() }}
-	{% endif %}
-	{% if (i[0].volunteer==current_user) or (i[0].vol_later==current_user) %}
-	  {{ i[1].unvolunteer() }}
-	{% endif %}
-	{% if (not i[0].volunteer) and (not i[0].vol_later) %}
-	  {{ i[1].volunteer() }}
-	  {{ i[1].vol_later() }}
-	{% endif %}
-	{{ i[1].comment }}
+            <p class="text-muted">Automatically handles arXiv links. Otherwise, <a href='{{ url_for('main.submit_m') }}'>submit manually.</a></p>
+
+            <div class="form-group">
+              {{ form.link.label(class_='control-label') }}
+              {{ form.link(class_='form-control') }}
+              {{ errors(form.link.errors) }}
+            </div>
+
+            <div class="form-group">
+              <label>Volunteer</label>
+              <div>
+              {% for subfield in form.volunteering %}
+                <label class="radio-inline">{{ subfield }} {{ subfield.label }}</label>
+              {% endfor %}
+              </div>
+            </div>
+
+            <div class="form-group">
+              {{ form.comments.label(class_='control-label') }}
+              {{ form.comments(class_='form-control', rows=4) }}
+              {% for error in form.comments.errors %}
+                <div class="text-danger">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-group">
+              {{ form.submit(class_='btn btn-primary') }}
+            </div>
+          </form>
         </div>
       </div>
-    {% endfor %}
+
+      <div class="panel panel-default papers-panel">
+        <div class="panel-heading"><h3 class="panel-title">Papers</h3></div>
+        <div class="panel-body">
+          <div class="list-filter mb-2">
+            <label for="paper-filter">Filter papers:</label>
+            <input id="paper-filter" type="search" class="form-control" placeholder="type to filter by title, author or submitter" />
+            <button type="button" id="clear-filter" class="btn btn-sm btn-default">Clear</button>
+          </div>
+          <form action='' method='post'>
+            <div class="papers-grid">
+            {% for i in editforms %}
+              {% set paper = i[0] %}
+              <div class="paper-wrap mb-3">
+                <div class="card paper-item p-2">
+                  {% include 'main/_paper.html' with context %}
+                </div>
+                <div class='vote action-bar mt-1'>
+                  {{ i[1].hidden_tag() }}
+                  {% if i[0].subber==current_user %}
+                    {{ i[1].unsubmit() }}
+                  {% endif %}
+                  {% if (i[0].volunteer==current_user) or (i[0].vol_later==current_user) %}
+                    {{ i[1].unvolunteer() }}
+                  {% endif %}
+                  {% if (not i[0].volunteer) and (not i[0].vol_later) %}
+                    {{ i[1].volunteer() }}
+                    {{ i[1].vol_later() }}
+                  {% endif %}
+                  {{ i[1].comment }}
+                  <!-- Nominate another user as a volunteer candidate -->
+                  <div class="nominate-wrap" style="display:flex; gap:8px; align-items:center;">
+                    {{ i[1].nominate_user(class_='form-control', style='max-width:220px;') }}
+                    {{ i[1].nominate_vol(class_='btn btn-default') }}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-</form>
+
+    <div class="col-md-4">
+      <div class="panel panel-default uploads-panel">
+        <div class="panel-heading"><h3 class="panel-title">Uploads</h3></div>
+        <div class="panel-body">
+          <form action='' method='post' enctype='multipart/form-data' class="mb-2">
+            <div class="form-group">
+              <label for="file">Select PDF to upload</label>
+              <input type='file' name='file' id='file' class='form-control-file' accept='.pdf'>
+            </div>
+            <div class="form-group">
+              <button type='submit' name='filesubmit' class='btn btn-secondary'>Upload</button>
+            </div>
+          </form>
+
+          <h5>Your uploaded files</h5>
+          {% if ups and ups|length > 0 %}
+            <ul class="list-unstyled">
+              {% for f in ups %}
+                <li class="mb-2">
+                  <a href="{{ url_for('main.files', path=username + '/' + f[0]) }}">{{ f[0] }}</a>
+                  <br>
+                  <small class="text-muted">submitted on {{ f[1] }}</small>
+                  <form action='' method='post' class='d-inline-block ml-2'>
+                    <button type='submit' class='btn btn-link btn-sm text-danger' name='Delete' value='{{ f[0] }}'>Delete</button>
+                  </form>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No uploaded files</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 
 {% endblock %}
-{#{% block scripts %}#}
+
 {% block scripts %}
 {{ super() }}
 <script>

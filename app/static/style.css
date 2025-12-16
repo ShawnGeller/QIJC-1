@@ -118,11 +118,11 @@ tr:hover{
 .paper-links a { color:var(--teal); word-break:break-all; }
 
 /* grid of papers for submit page */
-.papers-grid { display:grid; grid-template-columns: 1fr; gap:12px; align-items:start; }
+.papers-grid { display:grid; grid-template-columns: 1fr; gap:8px; align-items:start; }
 /* Make each paper-wrap a vertical flex container that stretches to equal height */
 .paper-wrap { display:flex; flex-direction:column; height:100%; align-items:stretch; }
 /* The visible card area should grow to fill available space so action-bar sits at bottom */
-.paper-wrap .paper-item { flex: 1 1 auto; display:flex; flex-direction:column; min-height: 220px; }
+.paper-wrap .paper-item { flex: 1 1 auto; display:flex; flex-direction:column; min-height: 300px; padding: 12px; }
 /* Ensure content inside the card flows vertically and can push the actions down */
 .paper-wrap .paper-item > * { /* keep children layout natural */ }
 /* action-bar should stay visually attached to the bottom of the wrap */
@@ -188,7 +188,7 @@ a { color: var(--accent); }
 .chip.purple { background: rgba(109,40,217,0.06); color: var(--purple); border-color: rgba(109,40,217,0.12); }
 
 /* responsive container tweaks */
-.container { max-width: 980px; margin: 0 auto; padding: 18px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 18px; }
 
 /* history grouping styles */
 .history-year { padding:16px; margin-bottom:14px; }
@@ -202,6 +202,63 @@ a { color: var(--accent); }
 .list-filter { margin-bottom: 12px; display:flex; gap:8px; align-items:center; }
 .list-filter input { flex:1; }
 
+/* Papers panel - tall to fit multiple paper cards */
+.papers-panel .panel-body {
+    min-height: 560px;
+    overflow: auto;
+}
+
+/* Uploads panel - shorter, just needs file upload form + file list */
+.uploads-panel .panel-body {
+    min-height: 250px;
+    min-width: 100px;
+    overflow: auto;
+}
+
+/* Make upload file input and upload list comfortable */
+.uploads-panel .form-control-file { display:block; width:100%; }
+.uploads-panel ul { margin: 0; padding-left: 0.75rem; }
+.uploads-panel li { word-break: break-word; }
+
 @media (max-width:600px){
     .container { padding: 12px; }
+}
+
+/* Widen the Papers column slightly on the submit page so it fits contents (~2cm wider) */
+.submit-row .col-md-8 {
+    flex: 0 0 76%;
+    max-height: fit-content;
+    max-width: 76%;
+
+}
+.submit-row .col-md-4 {
+    flex: 0 0 24%;
+    max-height: fit-content;
+    max-width: 24%;
+}
+
+@media (max-width: 991px) {
+    /* revert to stacked layout on small screens */
+    .submit-row .col-md-8,
+    .submit-row .col-md-4 {
+        flex: 0 0 auto;
+        max-width: 100%;
+    }
+}
+
+/* Make the submit row and its columns stretch so panels can grow vertically */
+.submit-row { display:flex; gap:16px; align-items:stretch; }
+.submit-row .col-md-8, .submit-row .col-md-4 { display:flex; flex-direction:column; }
+.submit-row .col-md-8 > .panel, .submit-row .col-md-4 > .panel { display:flex; flex-direction:column; flex:1 1 auto; }
+
+/* Slightly increase paper card min-height so action bar doesn't overlap */
+.paper-wrap .paper-item { min-height: 360px; }
+
+/* Ensure long titles, links and abstracts wrap instead of overflowing */
+.paper-item .paper-title,
+.paper-item .paper-authors,
+.paper-item .paper-abstract,
+.paper-item .paper-links {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }

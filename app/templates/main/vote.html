@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 
 {% block app_content %}
+  <style>
+    /* Slightly larger text on vote page for readability */
+    .paper-item { font-size: 1.05em; line-height: 1.5; }
+    .paper-title { font-size: 1.15em; }
+  </style>
   <!-- <h1>Summary</h1> -->
   <div class="columns" style="display:grid;grid-template-columns:33% 33% 33%">
     <div class="column">
@@ -37,6 +42,7 @@
       <div class="paper-wrap">
         <div class="card paper-item">
           <div id='{{ paper.id }}'></div>
+          {% set showvote = True %}
           {% include 'main/_paper.html' %}
         </div>
         <div class='vote action-bar' id="vote-form-{{ j }}">
@@ -45,6 +51,15 @@
             Vote: {{ i[1].vote_num(size=1, class_="vote-num") }} / {{ i[1].vote_den(size=1, class_="vote-den") }}
             <button class="vote-button" type="button" onclick="this.closest('form').submit();">Vote</button>
           </div>
+          <!-- Nominate another user as volunteer candidate for this paper -->
+            <div class="action-row nominate-wrap" style="margin-top:6px; gap:8px; align-items:center;">
+              <select name="nominate_user" class="form-control" style="max-width:240px;">
+                {% for val,label in nom_choices %}
+                  <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-default" type="submit" name="nominate_vol" value="{{ paper.id }}">Nominate</button>
+            </div>
         </div>
       </div>
     {% endfor %}

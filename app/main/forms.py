@@ -103,6 +103,9 @@ class EditForm(FlaskForm):
     vol_later = SubmitField('Volunteer Later')
     unvolunteer = SubmitField('unVolunteer')
     unsubmit = SubmitField('unSubmit')
+    # Nominate another user as volunteer candidate ("later")
+    nominate_user = SelectField('Nominate User', validate_choice=False, coerce=str)
+    nominate_vol = SubmitField('Nominate')
 
 class FullEditForm(FlaskForm):
     edits = FieldList(FormField(EditForm))

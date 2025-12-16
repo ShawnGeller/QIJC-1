@@ -51,13 +51,17 @@
     <!-- metadata column left intentionally minimal so names appear above title for better visibility when zoomed -->
   </div>
   <div class="paper-body">
-    {% if showsub %}
+    {% if showsub or showvote %}
       <div class="paper-sub" style="margin-bottom:6px;">
         <a href="{{ url_for('main.user', username=paper.subber.username) }}">{{ paper.subber.firstname }}</a>
         {% if paper.volunteer and paper.volunteer.firstname %}
           &nbsp;&#8594;&nbsp;<a href="{{ url_for('main.user', username=paper.volunteer.username) }}">{{ paper.volunteer.firstname }}</a>
         {% elif paper.vol_later and paper.vol_later.firstname %}
-          &nbsp;&#8594;&nbsp;<a href="{{ url_for('main.user', username=paper.vol_later.username) }}">{{ paper.vol_later.firstname }} (later)</a>
+          &nbsp;&#8594;&nbsp;<a href="{{ url_for('main.user', username=paper.vol_later.username) }}">{{ paper.vol_later.firstname }}</a>
+          <span class="chip" style="margin-left:6px;">Nominee</span>
+          {% if nominated_by and nominated_by.get(paper.id) %}
+            <span class="chip" style="margin-left:6px;">nominated by {{ nominated_by.get(paper.id).firstname }}</span>
+          {% endif %}
         {% endif %}
       </div>
     {% endif %}

@@ -16,7 +16,7 @@ from flask import (Flask, render_template, request,
                    send_from_directory, current_app)
 from markupsafe import Markup
 from flask_login import (current_user, login_user, logout_user, login_required)
-from sqlalchemy import cast, Float
+from sqlalchemy import cast, Float, inspect
 from werkzeug.utils import secure_filename
 from urllib.parse import urlparse, urljoin
 from app import db
@@ -26,7 +26,7 @@ from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             FullEditForm, CommentForm, MessageForm,
                             AnnouncementForm, EditCommentForm, DeleteCommentForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm, ChangeNameForm
-from app.models import User, Paper, Announcement, Upload, Comment
+from app.models import User, Paper, Announcement, Upload, Comment, Nomination
 from app.email import send_abstracts
 
 last_month = datetime.today() - timedelta(days=30)
@@ -80,6 +80,40 @@ def announce():
 @login_required
 def submit():
     form = PaperSubmissionForm()
+    # Handle file uploads and deletes submitted from the submit page
+    if request.method == 'POST':
+        # upload a file
+        if "filesubmit" in request.form:
+            uploaded_file = request.files.get('file')
+            if uploaded_file is None:
+                flash("no file")
+                return redirect(url_for('main.submit'))
+
+            r = store_upload(uploaded_file)
+            if r is None:
+                flash("Upload failed.")
+            else:
+                flash("Upload complete.")
+            return redirect(url_for('main.submit'))
+
+        # delete a file
+        if "Delete" in request.form:
+            cname = clean_pdf_name(request.form.get("Delete"))
+            if cname is None:
+                flash("Delete: bad file.")
+            else:
+                updir = get_upload_dir()
+                if updir is None:
+                    return redirect(url_for('main.submit'))
+
+                fullf = os.path.join(updir, cname)
+                if os.path.exists(fullf):
+                    os.remove(fullf)
+                    flash("File deleted.")
+                else:
+                    flash("Delete: file not found")
+
+            return redirect(url_for('main.submit'))
     if form.submit.data and form.validate_on_submit():
         # link_str = form.link.data.split('?')[0].split('.pdf')[0]
         link_str = form.link.data
@@ -142,6 +176,15 @@ def submit():
               .order_by(Paper.timestamp.desc()).all())
     editform = FullEditForm(edits=range(len(papers)))
     editforms = list(zip(papers, editform.edits))
+    # Populate nomination choices with active users
+    all_users = User.query.order_by(User.firstname.asc()).all()
+    nom_choices = [(u.username, f"{u.firstname} {u.lastname[0] if u.lastname else ''}") for u in all_users]
+    nom_choices.insert(0, ('', 'Select user'))
+    for _, f in editforms:
+        try:
+            f.nominate_user.choices = nom_choices
+        except Exception:
+            pass
     for i in range(len(editform.data['edits'])):
         paper = editforms[i][0]
         button = editform.data['edits'][i]
@@ -149,6 +192,22 @@ def submit():
             paper.volunteer = current_user
         elif button['vol_later']:
             paper.vol_later = current_user
+        elif button.get('nominate_vol'):
+            # Nominate another user by username for later volunteering
+            nominee_name = editforms[i][1].nominate_user.data if hasattr(editforms[i][1], 'nominate_user') else None
+            if nominee_name:
+                nominee = User.query.filter_by(username=nominee_name.strip()).first()
+                if nominee:
+                    paper.vol_later = nominee
+                    # Record nomination (safely ignore if table doesn't exist)
+                    try:
+                        if inspect(db.engine).has_table('nomination'):
+                            db.session.add(Nomination(paper_id=paper.id, nominee_id=nominee.id, nominator_id=current_user.id))
+                    except Exception:
+                        pass
+                    flash(f"Nominated {nominee.username} as volunteer candidate.")
+                else:
+                    flash("User not found for nomination.")
         elif button['unvolunteer']:
             if paper.volunteer:
                 paper.volunteer = None
@@ -166,11 +225,41 @@ def submit():
         db.session.commit()
         return redirect(url_for('main.submit'))
     delete_form = DeleteCommentForm()
+    # Also list user's uploaded files (previously on the /uploads page)
+    username = get_clean_username()
+    ups = []
+    updir = get_upload_dir()
+    if updir is not None and os.path.exists(updir):
+        for item in os.listdir(updir):
+            if os.path.isfile(os.path.join(updir, item)):
+                cname = clean_pdf_name(item)
+                if cname is not None:
+                    l = [cname, time.ctime(os.path.getmtime(os.path.join(updir, cname)))]
+                    ups.append(l)
+    ups.sort(reverse=True, key=lambda x: x[1])
+
+    # Build nominated_by map: only if nominations table exists
+    nominated_by = {}
+    try:
+        inspector = inspect(db.engine)
+        if inspector.has_table('nomination'):
+            for p in papers:
+                if p.vol_later:
+                    try:
+                        nm = (Nomination.query.filter_by(paper_id=p.id, nominee_id=p.vol_later.id)
+                              .order_by(Nomination.timestamp.desc()).first())
+                        if nm:
+                            nominated_by[p.id] = nm.nominator
+                    except Exception:
+                        continue
+    except Exception:
+        pass
+
     return render_template('main/submit.html', form=form,
                            title='Submit Paper', showsub=True,
                            editform=editform,
                            editforms=editforms, extras=True,
-                           delete_form=delete_form)
+                           delete_form=delete_form, ups=ups, username=username, nominated_by=nominated_by)
 
 
 @bp.route('/submit_m', methods=['GET', 'POST'])
@@ -228,7 +317,38 @@ def vote():
     papers = papers_v + papers_
     voteform = FullVoteForm(votes=range(len(papers)))
     voteforms = list(zip(papers, voteform.votes))
+    # Provide a list of users for nomination dropdowns on the vote page
+    all_users = User.query.order_by(User.firstname.asc()).all()
+    nom_choices = [(u.username, f"{u.firstname} {u.lastname[0] if u.lastname else ''}") for u in all_users]
+    nom_choices.insert(0, ('', 'Select user'))
     votes = 0
+    # Handle nominations coming from the vote page
+    if request.method == 'POST' and 'nominate_vol' in request.form:
+        try:
+            pid = int(request.form.get('nominate_vol'))
+        except (TypeError, ValueError):
+            pid = None
+        username = request.form.get('nominate_user', '')
+        if pid and username:
+            p = Paper.query.get(pid)
+            nominee = User.query.filter_by(username=username.strip()).first()
+            if p and nominee:
+                p.vol_later = nominee
+                # Only attempt to record nomination if table exists
+                try:
+                    if inspect(db.engine).has_table('nomination'):
+                        db.session.add(Nomination(paper_id=p.id, nominee_id=nominee.id, nominator_id=current_user.id))
+                except Exception:
+                    pass
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                flash(f"Nominated {nominee.username} for paper #{p.id}.")
+            else:
+                flash("Nomination failed: paper or user not found.")
+        return redirect(url_for('main.vote'))
+
     for i in range(len(voteform.data['votes'])):
         paper = voteforms[i][0]
         data = voteform.data['votes'][i]
@@ -271,12 +391,31 @@ def vote():
     # summary_vnames = [x[0] for x in summary_v_sorted]
     # summary_vcounts = [x[1] for x in summary_v_sorted]
 
+    # Build nominated_by map for display on vote page (only if table exists)
+    nominated_by = {}
+    try:
+        inspector = inspect(db.engine)
+        if inspector.has_table('nomination'):
+            for p in papers:
+                if p.vol_later:
+                    try:
+                        nm = (Nomination.query.filter_by(paper_id=p.id, nominee_id=p.vol_later.id)
+                              .order_by(Nomination.timestamp.desc()).first())
+                        if nm:
+                            nominated_by[p.id] = nm.nominator
+                    except Exception:
+                        continue
+    except Exception:
+        pass
+
     return render_template(
         'main/vote.html', title='Vote', showsub=True, voteform=voteform,
         voteforms=voteforms,
         summary_v=summary_v_sorted,
         summary_vl = summary_vl_sorted,
         summary_nv = summary_nv_sorted,
+        nom_choices=nom_choices,
+        nominated_by=nominated_by,
         # summary_vcounts=summary_vcounts,
         extras=True
     )
@@ -286,12 +425,13 @@ def vote():
 @login_required
 def user(username):
     form = ChangePasswordForm()
-    if form.submit_pass.data and form.validate_on_submit():
+    # Detect which user form was submitted by checking for its unique fields
+    if 'current_pass' in request.form and form.validate_on_submit():
         current_user.set_password(form.new_pass.data)
         db.session.commit()
         flash('Password changed.')
     form2 = ChangeEmailForm()
-    if form2.submit_email.data and form2.validate_on_submit():
+    if 'new_email' in request.form and form2.validate_on_submit():
         current_user.email = form2.new_email.data
         db.session.commit()
         flash('Email updated.')
@@ -536,61 +676,14 @@ def clean_pdf_name(fname):
 @bp.route('/uploads')
 @login_required
 def uploads():
-    username = get_clean_username()
-    if username is None:
-        return redirect(url_for('main.index'))
-
-    ups = []
-    updir = get_upload_dir()
-    if updir is None:
-        return redirect(url_for('main.index'))
-
-    if os.path.exists(updir):
-        for item in os.listdir(updir):
-            if os.path.isfile(os.path.join(updir,item)):
-                cname = clean_pdf_name(item)
-                if cname is not None:
-                    l = [cname,time.ctime(os.path.getmtime(os.path.join(updir,cname)))]
-                    ups.append(l)
-
-    ups.sort(reverse=True,key = lambda x: x[1])
-    return render_template('main/uploads.html', ups=ups, username=username)
+    # uploads route removed; uploads are handled on the submit page now
+    return redirect(url_for('main.submit'))
 
 @bp.route('/uploads', methods=['POST'])
 @login_required
 def upload_files():
-    if "filesubmit" in request.form:
-        uploaded_file = request.files['file']
-        if uploaded_file is None:
-            flash("no file")
-            return redirect(url_for('main.uploads'))
-
-        r = store_upload(uploaded_file)
-        if r is None:
-            flash("Upload failed.")
-        else:
-            flash("Upload complete.")
-        return redirect(url_for('main.uploads'))
-
-    if "Delete" in request.form:
-        cname = clean_pdf_name(request.form["Delete"])
-        if cname is None:
-            flash("Delete: bad file.")
-        else:
-            updir = get_upload_dir()
-            if updir is None:
-                return redirect(url_for('main.uploads'))
-
-            fullf = os.path.join(updir,cname)
-            if os.path.exists(fullf):
-                os.remove(fullf)
-                flash("File deleted.")
-            else:
-                flash("Delete: file not found")
-
-            # return redirect(url_for('main.uploads'))
-
-    return redirect(url_for('main.uploads'))
+    # uploads are now handled on the submit page; redirect there
+    return redirect(url_for('main.submit'))
 
 
 

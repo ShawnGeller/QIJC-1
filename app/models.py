@@ -135,3 +135,16 @@ class Upload(db.Model):
     # Relationships
     uploader_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
+
+
+class Nomination(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    # Relationships
+    paper_id = db.Column(db.Integer, db.ForeignKey('paper.id'), nullable=False)
+    nominee_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    nominator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    paper = db.relationship('Paper', backref='nominations', foreign_keys=[paper_id])
+    nominee = db.relationship('User', foreign_keys=[nominee_id])
+    nominator = db.relationship('User', foreign_keys=[nominator_id])
