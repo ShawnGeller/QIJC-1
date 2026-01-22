@@ -35,6 +35,7 @@
   </div>
   <h1>Vote</h1>
   <form action='' method='post'>
+    {{ voteform.hidden_tag() }}
     <div class="papers-grid">
     {% for j in range(voteforms|length) %}
       {% set i = voteforms[j] %}
@@ -49,7 +50,7 @@
           {{ i[1].hidden_tag() }}
           <div class="action-row">
             Vote: {{ i[1].vote_num(size=1, class_="vote-num") }} / {{ i[1].vote_den(size=1, class_="vote-den") }}
-            <button class="vote-button" type="button" onclick="this.closest('form').submit();">Vote</button>
+            <button class="vote-button" type="submit">Vote</button>
           </div>
           <!-- Nominate another user as volunteer candidate for this paper -->
             <div class="action-row nominate-wrap" style="margin-top:6px; gap:8px; align-items:center;">
@@ -69,14 +70,7 @@
 </form>
 
 <script>
-// Delegate vote button clicks to submit the closest enclosing form.
-document.addEventListener('click', function (e) {
-  const btn = e.target.closest && e.target.closest('.vote-button');
-  if (!btn) return;
-  // find the form that contains the hidden fields for this vote
-  const fm = btn.closest('form');
-  if (fm) fm.submit();
-});
+// no extra JS needed; buttons submit the enclosing form directly
 </script>
 {% endblock %}
 

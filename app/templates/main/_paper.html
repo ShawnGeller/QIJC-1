@@ -97,7 +97,11 @@
       </div>
     {% endif %}
     {% if showvote %}
-      <div class='votes'>{{ paper.score_n }}/{{ paper.score_d }} votes.</div>
+      {% if paper.score_n is not none and paper.score_d is not none %}
+        <div class='votes'>{{ paper.score_n }}/{{ paper.score_d }} votes.</div>
+      {% else %}
+        <div class='votes text-muted'>No votes yet.</div>
+      {% endif %}
     {% endif %}
   </div>
 </div>

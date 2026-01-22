@@ -317,51 +317,25 @@ def vote():
     papers = papers_v + papers_
     voteform = FullVoteForm(votes=range(len(papers)))
     voteforms = list(zip(papers, voteform.votes))
-    # Provide a list of users for nomination dropdowns on the vote page
-    all_users = User.query.order_by(User.firstname.asc()).all()
-    nom_choices = [(u.username, f"{u.firstname} {u.lastname[0] if u.lastname else ''}") for u in all_users]
-    nom_choices.insert(0, ('', 'Select user'))
     votes = 0
-    # Handle nominations coming from the vote page
-    if request.method == 'POST' and 'nominate_vol' in request.form:
-        try:
-            pid = int(request.form.get('nominate_vol'))
-        except (TypeError, ValueError):
-            pid = None
-        username = request.form.get('nominate_user', '')
-        if pid and username:
-            p = Paper.query.get(pid)
-            nominee = User.query.filter_by(username=username.strip()).first()
-            if p and nominee:
-                p.vol_later = nominee
-                # Only attempt to record nomination if table exists
-                try:
-                    if inspect(db.engine).has_table('nomination'):
-                        db.session.add(Nomination(paper_id=p.id, nominee_id=nominee.id, nominator_id=current_user.id))
-                except Exception:
-                    pass
-                try:
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-                flash(f"Nominated {nominee.username} for paper #{p.id}.")
-            else:
-                flash("Nomination failed: paper or user not found.")
-        return redirect(url_for('main.vote'))
-
-    for i in range(len(voteform.data['votes'])):
-        paper = voteforms[i][0]
-        data = voteform.data['votes'][i]
-        if data['vote_num'] and voteform.submit.data:  # val on num
-            paper.score_n = data['vote_num']
-            paper.score_d = data['vote_den']
+    if request.method == 'POST':
+        for i in range(len(voteform.data['votes'])):
+            paper = voteforms[i][0]
+            data = voteform.data['votes'][i]
+            num = data['vote_num']
+            den = data['vote_den']
+            if num is None or den is None:
+                continue
+            paper.score_n = num
+            paper.score_d = den
             paper.voted = datetime.now().date()
             votes += 1
-        db.session.commit()
-    if votes and voteform.submit.data:
-        flash('{} votes counted.'.format(votes))
-        week = datetime.now().date().strftime('%Y-%m-%d')
-        return redirect(url_for('main.history', week=week))
+        if votes:
+            db.session.commit()
+            flash('{} votes counted.'.format(votes))
+            week = datetime.now().date().strftime('%Y-%m-%d')
+            return redirect(url_for('main.history', week=week))
+        flash('No votes provided.')
 
     summary_vdict = {}
     # summary_vnames = []
