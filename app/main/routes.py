@@ -388,9 +388,6 @@ def vote():
         summary_v=summary_v_sorted,
         summary_vl = summary_vl_sorted,
         summary_nv = summary_nv_sorted,
-        nom_choices=nom_choices,
-        nominated_by=nominated_by,
-        # summary_vcounts=summary_vcounts,
         extras=True
     )
 
