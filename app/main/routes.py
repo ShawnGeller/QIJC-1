@@ -30,6 +30,7 @@ from app.models import User, Paper, Announcement, Upload, Comment, Nomination
 from app.email import send_abstracts
 
 last_month = datetime.today() - timedelta(days=30)
+one_year_ago = datetime.today() - timedelta(days=365)
 
 
 @bp.context_processor
@@ -173,6 +174,7 @@ def submit():
 
 
     papers = (Paper.query.filter(Paper.voted == None)
+              .filter(Paper.timestamp >= one_year_ago)
               .order_by(Paper.timestamp.desc()).all())
     editform = FullEditForm(edits=range(len(papers)))
     editforms = list(zip(papers, editform.edits))
@@ -300,7 +302,7 @@ def submit_m():
             db.session.commit()
         flash('Paper submitted.')
         return redirect(url_for('main.submit'))
-    papers = Paper.query.filter(Paper.timestamp >= last_month).all()
+    papers = Paper.query.filter(Paper.timestamp >= one_year_ago).all()
     return render_template('main/submit_m.html', papers=papers,
                            form=form, title='Submit Paper', showsub=True)
 
@@ -310,9 +312,11 @@ def submit_m():
 def vote():
     papers_v = (Paper.query.filter(Paper.voted==None)
               .filter(Paper.volunteer_id != None)
+              .filter(Paper.timestamp >= one_year_ago)
               .order_by(Paper.timestamp.asc()).all())
     papers_ = (Paper.query.filter(Paper.voted==None)
                .filter(Paper.volunteer_id == None)
+               .filter(Paper.timestamp >= one_year_ago)
                .order_by(Paper.timestamp.asc()).all())
     papers = papers_v + papers_
     voteform = FullVoteForm(votes=range(len(papers)))
