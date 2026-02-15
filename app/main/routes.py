@@ -317,29 +317,70 @@ def vote():
     papers = papers_v + papers_
     voteform = FullVoteForm(votes=range(len(papers)))
     voteforms = list(zip(papers, voteform.votes))
+    
+    # Handle nominations (separate from voting)
+    if request.method == 'POST' and 'nominate_vol' in request.form:
+        paper_id = request.form.get('nominate_vol')
+        # Get the nominate_user field with the paper-specific name
+        nominate_user = request.form.get(f'nominate_user_{paper_id}', '').strip()
+        if paper_id and nominate_user:
+            paper = Paper.query.get(paper_id)
+            nominee = User.query.filter_by(username=nominate_user).first()
+            if paper and nominee:
+                paper.vol_later = nominee
+                # Record nomination (safely ignore if table doesn't exist)
+                try:
+                    if inspect(db.engine).has_table('nomination'):
+                        db.session.add(Nomination(paper_id=paper.id, nominee_id=nominee.id, nominator_id=current_user.id))
+                except Exception:
+                    pass
+                db.session.commit()
+                flash(f"Nominated {nominee.firstname} {nominee.lastname[0] if nominee.lastname else ''} as volunteer candidate.")
+            else:
+                flash("Paper or user not found.")
+        return redirect(url_for('main.vote'))
+    
+    # Handle voting (validate form on POST)
     votes = 0
-    if request.method == 'POST':
-        for i in range(len(voteform.data['votes'])):
-            paper = voteforms[i][0]
-            data = voteform.data['votes'][i]
-            num = data['vote_num']
-            den = data['vote_den']
-            if num is None or den is None:
-                continue
-            paper.score_n = num
-            paper.score_d = den
-            paper.voted = datetime.now().date()
-            votes += 1
-        if votes:
-            db.session.commit()
-            flash('{} votes counted.'.format(votes))
-            week = datetime.now().date().strftime('%Y-%m-%d')
-            return redirect(url_for('main.history', week=week))
-        flash('No votes provided.')
+    if request.method == 'POST' and 'nominate_vol' not in request.form:
+        current_app.logger.info(f"Vote form submitted. Validating...")
+        current_app.logger.info(f"Form data: {voteform.data}")
+        current_app.logger.info(f"Form errors: {voteform.errors}")
+        if voteform.validate_on_submit():
+            current_app.logger.info(f"Form validated successfully")
+            votes_data = voteform.data.get('votes', [])
+            current_app.logger.info(f"Processing {len(votes_data)} vote entries")
+            for i, paper in enumerate(papers):
+                if i >= len(votes_data):
+                    break
+                data = votes_data[i]
+                num = data.get('vote_num')
+                den = data.get('vote_den')
+                if num is None or den is None or num == '' or den == '':
+                    continue
+                try:
+                    paper.score_n = int(num)
+                    paper.score_d = int(den)
+                    paper.voted = datetime.now().date()
+                    votes += 1
+                    current_app.logger.info(f"Recorded vote for paper {paper.id}: {num}/{den}")
+                except (ValueError, TypeError) as e:
+                    current_app.logger.warning(f"Invalid vote data for paper {paper.id}: {e}")
+                    continue
+            
+            if votes:
+                db.session.commit()
+                flash('{} votes counted.'.format(votes))
+                week = datetime.now().date().strftime('%Y-%m-%d')
+                current_app.logger.info(f"Redirecting to history for week {week}")
+                return redirect(url_for('main.history', week=week))
+            else:
+                flash('No valid votes provided.')
+                current_app.logger.info('No valid votes provided.')
+        else:
+            current_app.logger.error(f"Form validation failed: {voteform.errors}")
 
     summary_vdict = {}
-    # summary_vnames = []
-    # summary_vcounts = []
     for p in papers_v:
         v = p.volunteer.firstname
         if v not in summary_vdict:
@@ -362,8 +403,6 @@ def vote():
             summary_nvdict[v] += 1
     summary_nv_sorted = sorted(summary_nvdict.items(),key=operator.itemgetter(1),reverse=True)
     summary_vl_sorted = sorted(summary_vldict.items(),key=operator.itemgetter(1),reverse=True)
-    # summary_vnames = [x[0] for x in summary_v_sorted]
-    # summary_vcounts = [x[1] for x in summary_v_sorted]
 
     # Build nominated_by map for display on vote page (only if table exists)
     nominated_by = {}
@@ -382,12 +421,18 @@ def vote():
     except Exception:
         pass
 
+    # Populate nomination choices with active users
+    all_users = User.query.order_by(User.firstname.asc()).all()
+    nom_choices = [(u.username, f"{u.firstname} {u.lastname[0] if u.lastname else ''}") for u in all_users]
+    nom_choices.insert(0, ('', 'Select user'))
+
     return render_template(
         'main/vote.html', title='Vote', showsub=True, voteform=voteform,
         voteforms=voteforms,
         summary_v=summary_v_sorted,
         summary_vl = summary_vl_sorted,
         summary_nv = summary_nv_sorted,
+        nom_choices=nom_choices,
         extras=True
     )
 

@@ -8,7 +8,7 @@ from wtforms import (StringField, PasswordField, BooleanField,
                      SubmitField, IntegerField, FieldList, FormField,
                      SelectField, TextAreaField, RadioField, FileField)
 from wtforms.validators import (DataRequired, ValidationError, Email,
-                                EqualTo, Regexp)
+                                EqualTo, Regexp, Optional)
 from app.models import User, Paper
 
 class SearchForm(FlaskForm):
@@ -89,8 +89,8 @@ class ManualSubmissionForm(FlaskForm):
             raise ValidationError('Paper with this title already submitted.')
 
 class VoteForm(FlaskForm):
-    vote_num = IntegerField()
-    vote_den = IntegerField()
+    vote_num = IntegerField(validators=[Optional()])
+    vote_den = IntegerField(validators=[Optional()])
 
 class FullVoteForm(FlaskForm):
     master_den = IntegerField()
