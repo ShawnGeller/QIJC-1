@@ -1,6 +1,7 @@
 import os
 import re
 import uuid
+import io
 from datetime import datetime, timedelta
 from textwrap import dedent
 
@@ -31,6 +32,37 @@ from app.email import send_abstracts
 
 last_month = datetime.today() - timedelta(days=30)
 one_year_ago = datetime.today() - timedelta(days=365)
+
+
+def extract_arxiv_id(link_value):
+    if not link_value:
+        return None
+    match = re.search(r"([0-9]{4}\.[0-9]{4,5})(v\d+)?", str(link_value))
+    return match.group(1) if match else None
+
+
+def is_duplicate_active_paper(link_value):
+    candidate_link = (link_value or '').strip()
+    if not candidate_link:
+        return False
+
+    candidate_norm = candidate_link.rstrip('/')
+    candidate_arxiv_id = extract_arxiv_id(candidate_link)
+
+    active_papers = (Paper.query.filter(Paper.voted == None)
+                     .filter(Paper.timestamp >= one_year_ago)
+                     .all())
+    for paper in active_papers:
+        for existing in (paper.link, paper.pdf_url):
+            if not existing:
+                continue
+            existing_norm = str(existing).strip().rstrip('/')
+            if existing_norm == candidate_norm:
+                return True
+            existing_arxiv_id = extract_arxiv_id(existing)
+            if candidate_arxiv_id and existing_arxiv_id and candidate_arxiv_id == existing_arxiv_id:
+                return True
+    return False
 
 
 @bp.context_processor
@@ -118,6 +150,9 @@ def submit():
     if form.submit.data and form.validate_on_submit():
         # link_str = form.link.data.split('?')[0].split('.pdf')[0]
         link_str = form.link.data
+        if is_duplicate_active_paper(link_str):
+            flash('That paper is already on the list.')
+            return redirect(url_for('main.submit'))
         m = re.match(r".*/([0-9.]+\d).*", link_str)
         # print(m,flush=True)
         if m is not None:
@@ -137,6 +172,9 @@ def submit():
         authors = ", ".join([author.name for author in authors])
         a_url = q.entry_id
         p_url = q.pdf_url
+        if is_duplicate_active_paper(a_url) or is_duplicate_active_paper(p_url):
+            flash('That paper is already on the list.')
+            return redirect(url_for('main.submit'))
         p = Paper(link=a_url, subber=current_user,
                   authors=authors, abstract=abstract,
                   title=title, pdf_url=p_url)
@@ -216,10 +254,18 @@ def submit():
             elif paper.vol_later:
                 paper.vol_later = None
         elif button['unsubmit']:
+            try:
+                if inspect(db.engine).has_table('nomination'):
+                    Nomination.query.filter(Nomination.paper_id == paper.id).delete(synchronize_session=False)
+            except Exception:
+                pass
             p_comms = Comment.query.filter(Comment.paper_id == paper.id).all()
             for comment in p_comms:
+                uploads = Upload.query.filter(Upload.comment_id == comment.id).all()
+                for up in uploads:
+                    db.session.delete(up)
                 db.session.delete(comment)
-            db.session.delete(paper)
+            Paper.query.filter(Paper.id == paper.id).delete(synchronize_session=False)
         elif button['comment']:
             return redirect(url_for('main.comment_on', id=paper.id))
         else:
@@ -269,6 +315,9 @@ def submit():
 def submit_m():
     form = ManualSubmissionForm()
     if form.validate_on_submit():
+        if is_duplicate_active_paper(form.link.data):
+            flash('That paper is already on the list.')
+            return redirect(url_for('main.submit_m'))
         p = Paper(
             link=form.link.data,
             subber=current_user,

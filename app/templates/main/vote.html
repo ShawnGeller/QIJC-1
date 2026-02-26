@@ -69,7 +69,15 @@
 </form>
 
 <script>
-// no extra JS needed; buttons submit the enclosing form directly
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.vote-num, .vote-den').forEach(function (input) {
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+      }
+    });
+  });
+});
 </script>
 {% endblock %}
 
