@@ -315,11 +315,12 @@ def submit():
 def submit_m():
     form = ManualSubmissionForm()
     if form.validate_on_submit():
-        if is_duplicate_active_paper(form.link.data):
+        link_value = (form.link.data or '').strip() or None
+        if is_duplicate_active_paper(link_value):
             flash('That paper is already on the list.')
             return redirect(url_for('main.submit_m'))
         p = Paper(
-            link=form.link.data,
+            link=link_value,
             subber=current_user,
             authors=form.authors.data,
             abstract=form.abstract.data,
@@ -346,8 +347,7 @@ def submit_m():
             #     up.comment_id = comment.id
         db.session.commit()
         if form.volunteering.data:
-            Paper.query.filter_by(
-                link=form.link.data).first().volunteer = current_user
+            p.volunteer = current_user
             db.session.commit()
         flash('Paper submitted.')
         return redirect(url_for('main.submit'))

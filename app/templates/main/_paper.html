@@ -68,7 +68,9 @@
     <div class="paper-title title">{{ paper.title }}</div>
     <div class="paper-authors">{{ paper.authors }}</div>
     <div class="paper-links">
-      <a href='{{ paper.link }}' target='_blank'>{{ paper.link }}</a>
+      {% if paper.link and (paper.link|string|trim) and (paper.link|string|trim|lower != 'none') %}
+        <a href='{{ paper.link }}' target='_blank'>{{ paper.link }}</a>
+      {% endif %}
       {% if paper.pdf_url is not none %}
         <div><a href='{{ paper.pdf_url }}' target='_blank'>{{ paper.pdf_url }}</a></div>
       {% endif %}

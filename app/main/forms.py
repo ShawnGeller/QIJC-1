@@ -70,7 +70,7 @@ class PaperSubmissionForm(FlaskForm):
 
 class ManualSubmissionForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
-    link = StringField('Link', validators=[DataRequired()])
+    link = StringField('Link', validators=[Optional()])
     authors = StringField('Authors', validators=[DataRequired()])
     abstract = StringField('Abstract', validators=[DataRequired()])
     volunteering = BooleanField("I'm volunteering to discuss this paper.")
@@ -79,7 +79,9 @@ class ManualSubmissionForm(FlaskForm):
     submit = SubmitField('Submit paper.')
 
     def validate_link(self, link):
-        paper = Paper.query.filter_by(link=link.data).first()
+        if not link.data or not str(link.data).strip():
+            return
+        paper = Paper.query.filter_by(link=link.data.strip()).first()
         if paper is not None:
             raise ValidationError('Link already submitted.')
 
