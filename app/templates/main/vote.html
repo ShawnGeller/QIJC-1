@@ -51,14 +51,13 @@
           <div class="action-row">
             Vote: {{ i[1].vote_num(size=1, class_="vote-num") }} / {{ i[1].vote_den(size=1, class_="vote-den") }}
           </div>
-          <!-- Nominate another user as volunteer candidate for this paper -->
           <div class="action-row nominate-wrap" style="margin-top:6px; gap:8px; align-items:center;">
+            <label style="margin-right:6px;">Nominate:</label>
             <select name="nominate_user_{{ paper.id }}" class="form-control" style="max-width:240px;">
               {% for val,label in nom_choices %}
-                <option value="{{ val }}">{{ label }}</option>
+                <option value="{{ val }}" {% if paper.vol_later and val == paper.vol_later.username %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
-            <button class="btn btn-default" type="submit" name="nominate_vol" value="{{ paper.id }}">Nominate</button>
           </div>
         </div>
       </div>

@@ -3,9 +3,7 @@ from app import mail, db
 from app.models import User
 from flask_mail import Message
 from threading import Thread
-import math
 import requests
-from flask import current_app
 
 def _chunks(seq, size):
     for i in range(0, len(seq), size):
@@ -80,12 +78,86 @@ def send_via_sendgrid(app, subject, sender, recipients, text_body, html_body):
         resp.raise_for_status()
     app.logger.info("SendGrid message queued subject=%s recipients=%s", subject, recipients)
 
+
+def _graph_is_configured(app):
+    return all([
+        app.config.get("GRAPH_TENANT_ID"),
+        app.config.get("GRAPH_CLIENT_ID"),
+        app.config.get("GRAPH_CLIENT_SECRET"),
+    ])
+
+
+def _graph_access_token(app):
+    token_url = (
+        f"https://login.microsoftonline.com/{app.config.get('GRAPH_TENANT_ID')}"
+        "/oauth2/v2.0/token"
+    )
+    payload = {
+        "client_id": app.config.get("GRAPH_CLIENT_ID"),
+        "client_secret": app.config.get("GRAPH_CLIENT_SECRET"),
+        "scope": "https://graph.microsoft.com/.default",
+        "grant_type": "client_credentials",
+    }
+    resp = requests.post(token_url, data=payload, timeout=15)
+    if not (200 <= resp.status_code < 300):
+        raise RuntimeError(f"Graph token request failed: {resp.status_code} {resp.text}")
+    token = resp.json().get("access_token")
+    if not token:
+        raise RuntimeError("Graph token response missing access_token")
+    return token
+
+
+def send_via_graph(app, subject, sender, recipients, text_body, html_body, batch_size=50):
+    """Send via Microsoft Graph Mail API using client credentials."""
+    if not _graph_is_configured(app):
+        raise RuntimeError("Microsoft Graph mail configuration missing")
+    if not recipients:
+        return
+
+    graph_sender = app.config.get("GRAPH_SENDER") or sender
+    token = _graph_access_token(app)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    endpoint = f"https://graph.microsoft.com/v1.0/users/{graph_sender}/sendMail"
+    body_content = html_body if html_body else (text_body or "")
+    body_type = "HTML" if html_body else "Text"
+
+    for batch in _chunks(recipients, max(1, int(batch_size or 50))):
+        payload = {
+            "message": {
+                "subject": subject,
+                "body": {
+                    "contentType": body_type,
+                    "content": body_content,
+                },
+                "toRecipients": [
+                    {"emailAddress": {"address": r}} for r in batch
+                ],
+            },
+            "saveToSentItems": "true",
+        }
+        resp = requests.post(endpoint, json=payload, headers=headers, timeout=20)
+        if not (200 <= resp.status_code < 300):
+            raise RuntimeError(f"Graph send failed: {resp.status_code} {resp.text}")
+
+    app.logger.info("Graph message queued subject=%s recipients=%s", subject, recipients)
+
 def send_async_email(app, subject, sender, recipients, text_body, html_body, batch_size=50):
-    """Attempt SendGrid (if configured) else fall back to Flask-Mail SMTP."""
+    """Attempt Graph, then SendGrid, then fall back to Flask-Mail SMTP."""
     with app.app_context():
         # small wrapping to avoid extremely long lines (unchanged)
         safe_text = _wrap_text_lines(text_body or "", maxlen=750, is_html=False)
         safe_html = _wrap_text_lines(html_body or "", maxlen=750, is_html=True)
+
+        if _graph_is_configured(app):
+            try:
+                send_via_graph(app, subject, sender, recipients, safe_text, safe_html, batch_size=batch_size)
+                return
+            except Exception as e:
+                app.logger.error("Graph send failed: %s", e, exc_info=True)
+                # fall through to SendGrid/SMTP fallback
 
         if app.config.get("SENDGRID_API_KEY"):
             try:
