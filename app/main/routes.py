@@ -371,31 +371,33 @@ def vote():
     voteform = FullVoteForm(votes=range(len(papers)))
     voteforms = list(zip(papers, voteform.votes))
     
-    # Handle nominations (separate from voting)
-    if request.method == 'POST' and 'nominate_vol' in request.form:
-        paper_id = request.form.get('nominate_vol')
-        # Get the nominate_user field with the paper-specific name
-        nominate_user = request.form.get(f'nominate_user_{paper_id}', '').strip()
-        if paper_id and nominate_user:
-            paper = Paper.query.get(paper_id)
-            nominee = User.query.filter_by(username=nominate_user).first()
-            if paper and nominee:
-                paper.vol_later = nominee
-                # Record nomination (safely ignore if table doesn't exist)
-                try:
-                    if inspect(db.engine).has_table('nomination'):
-                        db.session.add(Nomination(paper_id=paper.id, nominee_id=nominee.id, nominator_id=current_user.id))
-                except Exception:
-                    pass
-                db.session.commit()
-                flash(f"Nominated {nominee.firstname} {nominee.lastname[0] if nominee.lastname else ''} as volunteer candidate.")
-            else:
-                flash("Paper or user not found.")
-        return redirect(url_for('main.vote'))
-    
-    # Handle voting (validate form on POST)
+    # Handle voting + nominations together on a single submit.
     votes = 0
-    if request.method == 'POST' and 'nominate_vol' not in request.form:
+    nominations = 0
+    if request.method == 'POST':
+        # Collect nomination selections from each paper row.
+        for paper in papers:
+            nominee_username = request.form.get(f'nominate_user_{paper.id}', '').strip()
+            if not nominee_username:
+                continue
+            nominee = User.query.filter_by(username=nominee_username).first()
+            if not nominee:
+                continue
+            paper.vol_later = nominee
+            nominations += 1
+            # Record nomination event when the table exists.
+            try:
+                if inspect(db.engine).has_table('nomination'):
+                    db.session.add(
+                        Nomination(
+                            paper_id=paper.id,
+                            nominee_id=nominee.id,
+                            nominator_id=current_user.id,
+                        )
+                    )
+            except Exception:
+                pass
+
         current_app.logger.info(f"Vote form submitted. Validating...")
         current_app.logger.info(f"Form data: {voteform.data}")
         current_app.logger.info(f"Form errors: {voteform.errors}")
@@ -423,14 +425,22 @@ def vote():
             
             if votes:
                 db.session.commit()
+                if nominations:
+                    flash(f'{nominations} nominations saved.')
                 flash('{} votes counted.'.format(votes))
                 week = datetime.now().date().strftime('%Y-%m-%d')
                 current_app.logger.info(f"Redirecting to history for week {week}")
                 return redirect(url_for('main.history', week=week))
             else:
+                if nominations:
+                    db.session.commit()
+                    flash(f'{nominations} nominations saved.')
                 flash('No valid votes provided.')
                 current_app.logger.info('No valid votes provided.')
         else:
+            if nominations:
+                db.session.commit()
+                flash(f'{nominations} nominations saved.')
             current_app.logger.error(f"Form validation failed: {voteform.errors}")
 
     summary_vdict = {}
