@@ -28,7 +28,7 @@ from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             AnnouncementForm, EditCommentForm, DeleteCommentForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm, ChangeNameForm
 from app.models import User, Paper, Announcement, Upload, Comment, Nomination
-from app.email import send_abstracts, send_nomination_notification
+from app.email import send_abstracts, send_nomination_notification, get_configured_sender
 
 last_month = datetime.today() - timedelta(days=30)
 one_year_ago = datetime.today() - timedelta(days=365)
@@ -711,11 +711,14 @@ def message():
         # choose papers as needed; here send all papers or supply empty list
         papers = Paper.query.order_by(Paper.timestamp.desc()).all()
 
-        sender = current_app.config.get('ADMINS',
-                 [ current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@example.com') ])[0]
+        sender = get_configured_sender()
 
-        send_abstracts(sender, subject, body, papers,
-                       mode=mode, user_ids=user_ids, manual_emails=manual_emails)
+        try:
+            send_abstracts(sender, subject, body, papers,
+                           mode=mode, user_ids=user_ids, manual_emails=manual_emails)
+        except Exception:
+            current_app.logger.exception('Failed to send message emails via /message route')
+            flash('Email send failed. Check mail configuration and logs.')
 
         return redirect(url_for('main.message'))
 

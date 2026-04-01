@@ -184,10 +184,17 @@ def send_email(subject, sender, recipients, text_body, html_body, batch_size=50)
            args=(current_app._get_current_object(), subject, sender, recipients or [], text_body, html_body, batch_size)
            ).start()
 
+
+def get_configured_sender():
+    admins = current_app.config.get('ADMINS') or []
+    if admins:
+        return admins[0]
+    return current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@example.com')
+
 def send_password_reset_email(user):
     token = user.get_reset_password_token()
     reset_url = url_for('auth.reset_password', token=token, _external=True)
-    sender = current_app.config.get('ADMINS', [current_app.config.get('MAIL_DEFAULT_SENDER','noreply@example.com')])[0]
+    sender = get_configured_sender()
     text = render_template('email/reset_password.txt', user=user, token=token, reset_url=reset_url)
     html = render_template('email/reset_password.html', user=user, token=token, reset_url=reset_url)
 
