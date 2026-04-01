@@ -1,0 +1,17 @@
+<p>A new paper has been submitted to QIJC.</p>
+
+<p>
+  <strong>Title:</strong> {{ paper.title }}<br>
+  <strong>Authors:</strong> {{ paper.authors }}<br>
+  <strong>Submitter:</strong> {{ submitter.firstname }}{% if submitter.lastname %} {{ submitter.lastname }}{% endif %}
+</p>
+
+{% if paper.link %}
+<p><strong>Link:</strong> <a href="{{ paper.link }}">{{ paper.link }}</a></p>
+{% endif %}
+{% if paper.pdf_url %}
+<p><strong>PDF:</strong> <a href="{{ paper.pdf_url }}">{{ paper.pdf_url }}</a></p>
+{% endif %}
+
+<p><strong>Abstract:</strong></p>
+<p>{{ paper.abstract }}</p>

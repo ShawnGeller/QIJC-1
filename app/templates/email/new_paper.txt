@@ -1,0 +1,10 @@
+A new paper has been submitted to QIJC.
+
+Title: {{ paper.title }}
+Authors: {{ paper.authors }}
+Submitter: {{ submitter.firstname }}{% if submitter.lastname %} {{ submitter.lastname }}{% endif %}
+{% if paper.link %}Link: {{ paper.link }}
+{% endif %}{% if paper.pdf_url %}PDF: {{ paper.pdf_url }}
+{% endif %}
+Abstract:
+{{ paper.abstract }}
