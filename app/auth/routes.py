@@ -86,9 +86,12 @@ def reset_password_req():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
-            send_password_reset_email(user)
-            flash('Password reset email sent.')
-            return redirect(url_for('auth.login'))
+            sent = send_password_reset_email(user)
+            if sent:
+                flash('Password reset email sent.')
+                return redirect(url_for('auth.login'))
+            flash('Unable to send password reset email right now. Please contact an administrator.')
+            return redirect(url_for('auth.reset_password_req'))
         else:
             flash('No user registered with that email address.')
             return redirect(url_for('auth.reset_password_req'))
