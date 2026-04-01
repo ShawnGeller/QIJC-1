@@ -238,3 +238,79 @@ def send_abstracts(e_from, subject, body, papers, mode='everyone', user_ids=None
 
     send_email(subject, e_from, recipients, text, html)
     flash('Message sent.')
+
+
+def send_new_paper_notification(paper, submitter):
+    recipients = resolve_recipients(mode='everyone')
+    if not recipients:
+        return
+
+    sender = current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@example.com')
+    subject = f"[QIJC] New paper submitted: {paper.title}"
+    text = render_template('email/new_paper.txt', paper=paper, submitter=submitter)
+    html = render_template('email/new_paper.html', paper=paper, submitter=submitter)
+
+    if current_app.config.get('MAIL_SUPPRESS_SEND', False):
+        current_app.logger.info("Mail suppressed: skipped new paper notification for paper_id=%s", paper.id)
+        return
+
+    send_email(subject, sender, recipients, text, html)
+
+
+def send_vote_notification(week, vote_count, nomination_count, voter):
+    recipients = resolve_recipients(mode='everyone')
+    if not recipients:
+        return
+
+    sender = current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@example.com')
+    subject = f"[QIJC] Vote results submitted ({week})"
+    text = render_template(
+        'email/vote_submitted.txt',
+        week=week,
+        vote_count=vote_count,
+        nomination_count=nomination_count,
+        voter=voter,
+    )
+    html = render_template(
+        'email/vote_submitted.html',
+        week=week,
+        vote_count=vote_count,
+        nomination_count=nomination_count,
+        voter=voter,
+    )
+
+    if current_app.config.get('MAIL_SUPPRESS_SEND', False):
+        current_app.logger.info("Mail suppressed: skipped vote notification for week=%s", week)
+        return
+
+    send_email(subject, sender, recipients, text, html)
+
+
+def send_nomination_notification(paper, nominee, nominator):
+    if not nominee or not nominee.email:
+        return
+
+    sender = current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@example.com')
+    subject = f"[QIJC] You were nominated to discuss: {paper.title}"
+    text = render_template(
+        'email/nomination.txt',
+        paper=paper,
+        nominee=nominee,
+        nominator=nominator,
+    )
+    html = render_template(
+        'email/nomination.html',
+        paper=paper,
+        nominee=nominee,
+        nominator=nominator,
+    )
+
+    if current_app.config.get('MAIL_SUPPRESS_SEND', False):
+        current_app.logger.info(
+            "Mail suppressed: skipped nomination notification for paper_id=%s nominee=%s",
+            paper.id,
+            nominee.username,
+        )
+        return
+
+    send_email(subject, sender, [nominee.email], text, html)

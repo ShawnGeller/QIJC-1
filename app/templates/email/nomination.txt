@@ -1,0 +1,7 @@
+You were nominated to discuss a QIJC paper.
+
+Title: {{ paper.title }}
+Nominated by: {{ nominator.firstname }}{% if nominator.lastname %} {{ nominator.lastname }}{% endif %}
+{% if paper.link %}Link: {{ paper.link }}
+{% endif %}{% if paper.pdf_url %}PDF: {{ paper.pdf_url }}
+{% endif %}

@@ -1,0 +1,7 @@
+<p>QIJC voting has been submitted for week <strong>{{ week }}</strong>.</p>
+
+<p>
+  <strong>Votes recorded:</strong> {{ vote_count }}<br>
+  <strong>Nominations saved:</strong> {{ nomination_count }}<br>
+  <strong>Submitted by:</strong> {{ voter.firstname }}{% if voter.lastname %} {{ voter.lastname }}{% endif %}
+</p>

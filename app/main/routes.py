@@ -28,7 +28,7 @@ from app.main.forms import (PaperSubmissionForm, ManualSubmissionForm,
                             AnnouncementForm, EditCommentForm, DeleteCommentForm)
 from app.auth.forms import ChangePasswordForm, ChangeEmailForm, ChangeNameForm
 from app.models import User, Paper, Announcement, Upload, Comment, Nomination
-from app.email import send_abstracts
+from app.email import send_abstracts, send_nomination_notification
 
 last_month = datetime.today() - timedelta(days=30)
 one_year_ago = datetime.today() - timedelta(days=365)
@@ -238,14 +238,17 @@ def submit():
             if nominee_name:
                 nominee = User.query.filter_by(username=nominee_name.strip()).first()
                 if nominee:
-                    paper.vol_later = nominee
-                    # Record nomination (safely ignore if table doesn't exist)
-                    try:
-                        if inspect(db.engine).has_table('nomination'):
-                            db.session.add(Nomination(paper_id=paper.id, nominee_id=nominee.id, nominator_id=current_user.id))
-                    except Exception:
-                        pass
-                    flash(f"Nominated {nominee.username} as volunteer candidate.")
+                    if paper.vol_later_id != nominee.id:
+                        paper.vol_later = nominee
+                        # Record nomination (safely ignore if table doesn't exist)
+                        try:
+                            if inspect(db.engine).has_table('nomination'):
+                                db.session.add(Nomination(paper_id=paper.id, nominee_id=nominee.id, nominator_id=current_user.id))
+                        except Exception:
+                            pass
+                        flash(f"Nominated {nominee.username} as volunteer candidate.")
+                        db.session.commit()
+                        send_nomination_notification(paper, nominee, current_user)
                 else:
                     flash("User not found for nomination.")
         elif button['unvolunteer']:
@@ -374,6 +377,7 @@ def vote():
     # Handle voting + nominations together on a single submit.
     votes = 0
     nominations = 0
+    nomination_events = []
     if request.method == 'POST':
         # Collect nomination selections from each paper row.
         for paper in papers:
@@ -383,20 +387,22 @@ def vote():
             nominee = User.query.filter_by(username=nominee_username).first()
             if not nominee:
                 continue
-            paper.vol_later = nominee
-            nominations += 1
-            # Record nomination event when the table exists.
-            try:
-                if inspect(db.engine).has_table('nomination'):
-                    db.session.add(
-                        Nomination(
-                            paper_id=paper.id,
-                            nominee_id=nominee.id,
-                            nominator_id=current_user.id,
+            if paper.vol_later_id != nominee.id:
+                paper.vol_later = nominee
+                nominations += 1
+                nomination_events.append((paper, nominee))
+                # Record nomination event when the table exists.
+                try:
+                    if inspect(db.engine).has_table('nomination'):
+                        db.session.add(
+                            Nomination(
+                                paper_id=paper.id,
+                                nominee_id=nominee.id,
+                                nominator_id=current_user.id,
+                            )
                         )
-                    )
-            except Exception:
-                pass
+                except Exception:
+                    pass
 
         current_app.logger.info(f"Vote form submitted. Validating...")
         current_app.logger.info(f"Form data: {voteform.data}")
@@ -430,17 +436,23 @@ def vote():
                 flash('{} votes counted.'.format(votes))
                 week = datetime.now().date().strftime('%Y-%m-%d')
                 current_app.logger.info(f"Redirecting to history for week {week}")
+                for paper, nominee in nomination_events:
+                    send_nomination_notification(paper, nominee, current_user)
                 return redirect(url_for('main.history', week=week))
             else:
                 if nominations:
                     db.session.commit()
                     flash(f'{nominations} nominations saved.')
+                    for paper, nominee in nomination_events:
+                        send_nomination_notification(paper, nominee, current_user)
                 flash('No valid votes provided.')
                 current_app.logger.info('No valid votes provided.')
         else:
             if nominations:
                 db.session.commit()
                 flash(f'{nominations} nominations saved.')
+                for paper, nominee in nomination_events:
+                    send_nomination_notification(paper, nominee, current_user)
             current_app.logger.error(f"Form validation failed: {voteform.errors}")
 
     summary_vdict = {}

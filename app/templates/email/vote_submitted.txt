@@ -1,0 +1,5 @@
+QIJC voting has been submitted for week {{ week }}.
+
+Votes recorded: {{ vote_count }}
+Nominations saved: {{ nomination_count }}
+Submitted by: {{ voter.firstname }}{% if voter.lastname %} {{ voter.lastname }}{% endif %}
