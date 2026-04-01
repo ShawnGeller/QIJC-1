@@ -201,12 +201,15 @@ def send_password_reset_email(user):
     current_app.logger.info("Preparing reset email for user=%s email=%s", user.username, user.email)
 
     if (not current_app.config.get('MAIL_SERVER')) or current_app.config.get('MAIL_SUPPRESS_SEND', False):
-        current_app.logger.info("Mail not configured/suppressed — printed reset URL for dev: %s", reset_url)
-        print("Password reset URL (dev):", reset_url)
-        flash('Password reset link printed to console (development mode).')
-        return
+        current_app.logger.warning(
+            "Password reset email not sent because mail is not configured or MAIL_SUPPRESS_SEND is enabled for user=%s email=%s",
+            user.username,
+            user.email,
+        )
+        return False
 
     send_email('[QIJC] Reset Your Password', sender, [user.email], text, html)
+    return True
 
 # --- New/updated helpers for selectable recipients ---
 def resolve_recipients(mode='everyone', user_ids=None, manual_emails=None):
