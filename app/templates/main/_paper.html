@@ -99,7 +99,9 @@
       </div>
     {% endif %}
     {% if showvote %}
-      {% if paper.score_n is not none and paper.score_d is not none %}
+      {% if paper.is_expired %}
+        <div class='votes' style="color: #e74c3c; font-weight: bold;">EXPIRED</div>
+      {% elif paper.score_n is not none and paper.score_d is not none %}
         <div class='votes'>{{ paper.score_n }}/{{ paper.score_d }} votes.</div>
       {% else %}
         <div class='votes text-muted'>No votes yet.</div>

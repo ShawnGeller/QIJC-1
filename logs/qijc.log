@@ -1913,3 +1913,8 @@ sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: nomin
 [parameters: ('2025-12-16 12:46:04.471936', 1913, 11, 0)]
 (Background on this error at: https://sqlalche.me/e/14/e3q8)
 2025-12-16 17:47:46,702 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2026-04-01 12:32:53,904 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2026-04-01 12:32:54,292 INFO: QIJC app starting [in /Users/diyora/QIJC/app/__init__.py:52]
+2026-04-01 12:33:18,174 INFO: Preparing reset email for user=medoriku email=dida3797@colorado.edu [in /Users/diyora/QIJC/app/email.py:201]
+2026-04-01 12:33:18,175 INFO: Queueing email to 1 recipients subject=[QIJC] Reset Your Password [in /Users/diyora/QIJC/app/email.py:182]
+2026-04-01 12:33:18,530 INFO: SMTP message sent subject=[QIJC] Reset Your Password recipients=['dida3797@colorado.edu'] [in /Users/diyora/QIJC/app/email.py:176]
