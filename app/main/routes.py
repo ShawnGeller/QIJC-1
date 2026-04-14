@@ -163,7 +163,8 @@ def submit():
         try:
             rs = arxiv.Search(id_list=[id])
             q = next(rs.results())
-        except:
+        except (StopIteration, Exception) as e:
+            current_app.logger.error(f"ArXiv scraping error for id {id}: {e}", exc_info=True)
             flash('Scraping error, check link or submit manually.')
             return redirect(url_for('main.submit_m'))
         authors = q.authors
@@ -216,6 +217,9 @@ def submit():
               .order_by(Paper.timestamp.desc()).all())
     editform = FullEditForm(edits=range(len(papers)))
     editforms = list(zip(papers, editform.edits))
+    # Add is_expired flag to papers (for consistency, though should not appear on submit page)
+    for paper in papers:
+        paper.is_expired = False  # These papers are recent, not expired
     # Populate nomination choices with active users
     all_users = User.query.order_by(User.firstname.asc()).all()
     nom_choices = [(u.username, f"{u.firstname} {u.lastname[0] if u.lastname else ''}") for u in all_users]
@@ -354,7 +358,9 @@ def submit_m():
             db.session.commit()
         flash('Paper submitted.')
         return redirect(url_for('main.submit'))
-    papers = Paper.query.filter(Paper.timestamp >= one_year_ago).all()
+    papers = (Paper.query.filter(Paper.voted == None)
+              .filter(Paper.timestamp >= one_year_ago)
+              .order_by(Paper.timestamp.desc()).all())
     return render_template('main/submit_m.html', papers=papers,
                            form=form, title='Submit Paper', showsub=True)
 
@@ -365,11 +371,11 @@ def vote():
     papers_v = (Paper.query.filter(Paper.voted==None)
               .filter(Paper.volunteer_id != None)
               .filter(Paper.timestamp >= one_year_ago)
-              .order_by(Paper.timestamp.asc()).all())
+              .order_by(Paper.timestamp.desc()).all())
     papers_ = (Paper.query.filter(Paper.voted==None)
                .filter(Paper.volunteer_id == None)
                .filter(Paper.timestamp >= one_year_ago)
-               .order_by(Paper.timestamp.asc()).all())
+               .order_by(Paper.timestamp.desc()).all())
     papers = papers_v + papers_
     voteform = FullVoteForm(votes=range(len(papers)))
     voteforms = list(zip(papers, voteform.votes))
@@ -378,8 +384,9 @@ def vote():
     votes = 0
     nominations = 0
     nomination_events = []
+    nomination_updates = []  # Store nomination changes without committing yet
     if request.method == 'POST':
-        # Collect nomination selections from each paper row.
+        # Collect nomination selections from each paper row (without committing yet).
         for paper in papers:
             nominee_username = request.form.get(f'nominate_user_{paper.id}', '').strip()
             if not nominee_username:
@@ -388,21 +395,8 @@ def vote():
             if not nominee:
                 continue
             if paper.vol_later_id != nominee.id:
-                paper.vol_later = nominee
-                nominations += 1
-                nomination_events.append((paper, nominee))
-                # Record nomination event when the table exists.
-                try:
-                    if inspect(db.engine).has_table('nomination'):
-                        db.session.add(
-                            Nomination(
-                                paper_id=paper.id,
-                                nominee_id=nominee.id,
-                                nominator_id=current_user.id,
-                            )
-                        )
-                except Exception:
-                    pass
+                # Store nomination change for later application
+                nomination_updates.append((paper, nominee))
 
         current_app.logger.info(f"Vote form submitted. Validating...")
         current_app.logger.info(f"Form data: {voteform.data}")
@@ -429,30 +423,41 @@ def vote():
                     current_app.logger.warning(f"Invalid vote data for paper {paper.id}: {e}")
                     continue
             
-            if votes:
+            # Now apply nomination updates and prepare nomination events
+            for paper, nominee in nomination_updates:
+                paper.vol_later = nominee
+                nominations += 1
+                nomination_events.append((paper, nominee))
+                # Record nomination event when the table exists.
+                try:
+                    if inspect(db.engine).has_table('nomination'):
+                        db.session.add(
+                            Nomination(
+                                paper_id=paper.id,
+                                nominee_id=nominee.id,
+                                nominator_id=current_user.id,
+                            )
+                        )
+                except Exception:
+                    pass
+            
+            if votes or nominations:
                 db.session.commit()
-                if nominations:
+                if votes and nominations:
+                    flash(f'{nominations} nominations saved, {votes} votes counted.')
+                elif nominations:
                     flash(f'{nominations} nominations saved.')
-                flash('{} votes counted.'.format(votes))
+                elif votes:
+                    flash('{} votes counted.'.format(votes))
                 week = datetime.now().date().strftime('%Y-%m-%d')
                 current_app.logger.info(f"Redirecting to history for week {week}")
                 for paper, nominee in nomination_events:
                     send_nomination_notification(paper, nominee, current_user)
                 return redirect(url_for('main.history', week=week))
             else:
-                if nominations:
-                    db.session.commit()
-                    flash(f'{nominations} nominations saved.')
-                    for paper, nominee in nomination_events:
-                        send_nomination_notification(paper, nominee, current_user)
-                flash('No valid votes provided.')
-                current_app.logger.info('No valid votes provided.')
+                flash('No valid votes or nominations provided.')
+                current_app.logger.info('No valid votes or nominations provided.')
         else:
-            if nominations:
-                db.session.commit()
-                flash(f'{nominations} nominations saved.')
-                for paper, nominee in nomination_events:
-                    send_nomination_notification(paper, nominee, current_user)
             current_app.logger.error(f"Form validation failed: {voteform.errors}")
 
     summary_vdict = {}
@@ -500,6 +505,10 @@ def vote():
     all_users = User.query.order_by(User.firstname.asc()).all()
     nom_choices = [(u.username, f"{u.firstname} {u.lastname[0] if u.lastname else ''}") for u in all_users]
     nom_choices.insert(0, ('', 'Select user'))
+
+    # Add is_expired flag to each paper for template display
+    for paper in papers:
+        paper.is_expired = paper.timestamp < (datetime.now().date() - timedelta(days=365))
 
     return render_template(
         'main/vote.html', title='Vote', showsub=True, voteform=voteform,
@@ -561,6 +570,9 @@ def history():
                   .order_by(cast(Paper.score_n, Float)
                             / cast(Paper.score_d, Float)).all())
         papers.reverse()
+        # Add is_expired flag
+        for paper in papers:
+            paper.is_expired = paper.timestamp < (datetime.now().date() - timedelta(days=365))
         return render_template('main/history.html', papers=papers,
                                showvote=True, showsub=True)
     weeks = [paper.voted for paper
@@ -695,6 +707,7 @@ def message():
         subject = request.form.get('subject', '').strip()
         body = request.form.get('body', '').strip()
         mode = request.form.get('recipients_mode', 'everyone')
+        include_abstracts = request.form.get('include_abstracts', '0') == '1'
         user_ids = []
         manual_emails = None
 
@@ -708,8 +721,14 @@ def message():
             manual_raw = request.form.get('manual_emails', '')
             manual_emails = [e.strip() for e in manual_raw.split(',') if e.strip()]
 
+        # Get recent papers from the last week (for abstract inclusion)
+        last_week = datetime.now().date() - timedelta(days=7)
+        recent_papers = []
+        if include_abstracts:
+            recent_papers = Paper.query.filter(Paper.timestamp >= last_week).order_by(Paper.timestamp.desc()).all()
+        
         # choose papers as needed; here send all papers or supply empty list
-        papers = Paper.query.order_by(Paper.timestamp.desc()).all()
+        papers = recent_papers if include_abstracts else []
 
         sender = get_configured_sender()
 
