@@ -87,4 +87,19 @@ def logged_in_fxn(request, test_client):
     def logout():
         test_client.get('/logout', follow_redirects=True)
     request.addfinalizer(logout)
+
+@pytest.fixture(scope='class')
+def admin_client(test_client):
+    """Logged-in admin user for testing admin-only pages."""
+    test_client.post('/login', data=dict(
+        username='testadmin', password='adminpw'),
+                    follow_redirects=True)
+    yield test_client
+    test_client.get('/logout', follow_redirects=True)
+
+@pytest.fixture(scope='function')
+def test_db(test_client):
+    """Database fixture for per-function cleanup."""
+    yield db
+    # Tests can modify data, fixture allows fresh start per test
                                    
