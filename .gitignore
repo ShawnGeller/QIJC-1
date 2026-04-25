@@ -35,6 +35,8 @@ archive/
 flask_session/
 migrations/
 app/test.db
+app.db
+logs/
 .idea/
 config.py
 /database/
