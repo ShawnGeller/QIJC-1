@@ -2,6 +2,7 @@ from app import db
 from app.auth import bp
 from flask import (Flask, render_template, request, flash,
                    redirect, url_for)
+from markupsafe import Markup
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
@@ -93,7 +94,9 @@ def reset_password_req():
             flash('Unable to send password reset email right now. Please contact an administrator.')
             return redirect(url_for('auth.reset_password_req'))
         else:
-            flash('No user registered with that email address.')
+            flash(Markup('No user registered with that email address. '
+                  '<a href="' + url_for('auth.register') + '">Request an account</a>'),
+                  'warning')
             return redirect(url_for('auth.reset_password_req'))
     return render_template('auth/reset_password_req.html',
                            title='Reset Password', form=form)
