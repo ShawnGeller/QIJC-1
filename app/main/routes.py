@@ -722,7 +722,8 @@ def message():
             manual_emails = [e.strip() for e in manual_raw.split(',') if e.strip()]
 
         # Get recent papers from the last week (for abstract inclusion)
-        last_week = datetime.now().date() - timedelta(days=7)
+        # Use UTC to match database storage (Paper.timestamp default is datetime.utcnow)
+        last_week = datetime.utcnow().date() - timedelta(days=7)
         recent_papers = []
         if include_abstracts:
             recent_papers = Paper.query.filter(Paper.timestamp >= last_week).order_by(Paper.timestamp.desc()).all()
