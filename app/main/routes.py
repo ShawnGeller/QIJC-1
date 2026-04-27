@@ -721,12 +721,20 @@ def message():
             manual_raw = request.form.get('manual_emails', '')
             manual_emails = [e.strip() for e in manual_raw.split(',') if e.strip()]
 
-        # Get recent papers from the last week (for abstract inclusion)
-        # Use UTC to match database storage (Paper.timestamp default is datetime.utcnow)
-        last_week = datetime.utcnow().date() - timedelta(days=7)
+        # Get papers from vote page (unvoted papers from the past year)
+        # Same logic as vote page to show most recent voteable papers
         recent_papers = []
         if include_abstracts:
-            recent_papers = Paper.query.filter(Paper.timestamp >= last_week).order_by(Paper.timestamp.desc()).all()
+            papers_v = (Paper.query.filter(Paper.voted == None)
+                      .filter(Paper.volunteer_id != None)
+                      .filter(Paper.timestamp >= one_year_ago)
+                      .order_by(Paper.timestamp.desc()).all())
+            papers_no_vol = (Paper.query.filter(Paper.voted == None)
+                           .filter(Paper.volunteer_id == None)
+                           .filter(Paper.timestamp >= one_year_ago)
+                           .order_by(Paper.timestamp.desc()).all())
+            recent_papers = papers_v + papers_no_vol
+            current_app.logger.info(f"Message with abstracts: papers_found={len(recent_papers)}")
         
         # choose papers as needed; here send all papers or supply empty list
         papers = recent_papers if include_abstracts else []
